@@ -6,7 +6,7 @@ uniform sampler1D gradients;
 uniform float lacunarity;
 uniform float H;
 uniform int octaves;
-uniform float resolution;
+uniform int resolution;
 
 float f(float t) {
 	// For some reason, it doesn't work using the provided function:
@@ -30,10 +30,10 @@ float noise(vec2 point) {
 	vec2 c = point - (cell + vec2(0, 1));
 	vec2 d = point - (cell + vec2(1, 1));
 
-	vec2 gs = normalize(texture(gradients, custom_hash(cell.x, cell.y)/resolution).rg);
-	vec2 gt = normalize(texture(gradients, custom_hash(cell.x + 1, cell.y)/resolution).rg);
-	vec2 gu = normalize(texture(gradients, custom_hash(cell.x, cell.y + 1)/resolution).rg);
-	vec2 gv = normalize(texture(gradients, custom_hash(cell.x + 1, cell.y + 1)/resolution).rg);
+	vec2 gs = normalize(texture(gradients, float(custom_hash(cell.x, cell.y))/resolution).rg);
+	vec2 gt = normalize(texture(gradients, float(custom_hash(cell.x + 1, cell.y))/resolution).rg);
+	vec2 gu = normalize(texture(gradients, float(custom_hash(cell.x, cell.y + 1))/resolution).rg);
+	vec2 gv = normalize(texture(gradients, float(custom_hash(cell.x + 1, cell.y + 1))/resolution).rg);
 
 	float s = dot(gs, a);
 	float t = dot(gt, b);
@@ -46,16 +46,29 @@ float noise(vec2 point) {
 	return mix(st, uv, f(a.y));
 }
 
-void main() {
-
+float generateMap(vec2 point) {
 	float value = 0.0;
-	vec2 point = tc;
 
 	for (int i = 0; i < octaves; i++) {
-		value += noise(point) * pow(lacunarity, -H*i);
+		value += abs(noise(point)) * pow(lacunarity, -H*i);
 		point *= lacunarity;
 	}
+	return 1 - value;
+}
 
-  color = vec3((value + 1) * 0.5);
+vec2 computeDiff() {
+
+	float dstep = 1.0/resolution;
+
+	float yxm = generateMap(tc+vec2(-dstep, 0));
+  float yxp = generateMap(tc+vec2(dstep, 0));
+  float yzm = generateMap(tc+vec2(0, -dstep));
+  float yzp = generateMap(tc+vec2(0, dstep));
+
+  return vec2((yxp - yxm + 1)*0.5, (yzp - yzm + 1)*0.5);
+}
+
+void main() {
+  color = vec3(generateMap(tc), computeDiff());
 }
 

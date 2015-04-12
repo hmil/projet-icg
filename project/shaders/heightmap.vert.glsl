@@ -1,6 +1,5 @@
 #version 330 core
 
-uniform int resolution;
 
 in vec2 position;
 out vec2 tc;

@@ -12,7 +12,6 @@ protected:
     
 public:    
 	void init(const int resolution){
-
 		_resolution = resolution;
 
         ///--- Compile the shaders
@@ -60,7 +59,6 @@ public:
 			glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 			glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 			glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-			// glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_WRAP_T, GL_REPEAT);// 1D tex don't need it ?
 
 			// Texture uniforms
 			GLuint tex_id = glGetUniformLocation(_pid, "gradients");
@@ -79,14 +77,14 @@ public:
 		glDeleteTextures(1, &_grad);
     }
     
-	void draw(float H, float lacunarity, int octaves){
+	void drawHeights(float H, float lacunarity, int octaves){
         glUseProgram(_pid);
         glBindVertexArray(_vao);
 		
 			GLuint uni_id;
 
 			uni_id = glGetUniformLocation(_pid, "resolution");
-			glUniform1f(uni_id, _resolution);
+			glUniform1i(uni_id, _resolution);
 			uni_id = glGetUniformLocation(_pid, "H");
 			glUniform1f(uni_id, H);
 			uni_id = glGetUniformLocation(_pid, "lacunarity");

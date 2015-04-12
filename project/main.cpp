@@ -4,7 +4,8 @@
 #include "FrameBuffer.h"
 #include "trackball.h"
 
-#define TEXTURE_SIZE 1600
+
+#define TEXTURE_SIZE 1024
 
 int width=1280, height=720;
 
@@ -17,22 +18,22 @@ mat4 trackball_matrix;
 mat4 old_trackball_matrix;
 
 
-static float H = 0.7f;
-static float lacunarity = 1.92;
-static int octaves = 7;
+static float H = 0.85f;
+static float lacunarity = 2;
+static int octaves = 8;
 
 
 void generateHeightmap() {
 	fb.bind();
-	glViewport(0, 0, TEXTURE_SIZE, TEXTURE_SIZE);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	generator.draw(H, lacunarity, octaves);
-	glViewport(0, 0, width, height);
+	generator.drawHeights(H, lacunarity, octaves);
 	fb.unbind();
+	glViewport(0, 0, width, height);
+	
 }
 
 void init(){
-    glClearColor(0,0.2,0.5, /*solid*/1.0 );    
+    glClearColor(0,0,0, /*solid*/1.0 );    
     glEnable(GL_DEPTH_TEST);
 	generator.init(1024);
 	GLuint tex_coord = fb.init(true /* use interpolation */);
@@ -49,14 +50,17 @@ void display(){
     ///--- Setup view-projection matrix
     float ratio = width / (float) height;
     static mat4 projection = Eigen::perspective(45.0f, ratio, 0.1f, 10.0f);
-    vec3 cam_pos(0.0f, 1.0f, -3.0f);
-    vec3 cam_look(0.0f, .5f, 0.0f);
+    vec3 cam_pos(0.0f, 0.0f, -3.0f);
+    vec3 cam_look(0.0f, 0.0f, 0.0f);
     vec3 cam_up(0.0f, 1.0f, 0.0f);
     mat4 view = Eigen::lookAt(cam_pos, cam_look, cam_up);
 	mat4 VP = projection * view * trackball_matrix;
+
+	mat4 model = mat4::Identity();
+	model(1, 3) = -1;
     
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
- 	grid.draw(VP);
+	grid.draw(model, view * trackball_matrix, projection, TEXTURE_SIZE);
 }
 
 
@@ -103,6 +107,10 @@ void keyboard(int key, int action) {
 	}
 }
 
+void cleanup(){
+
+}
+
 int main(int, char**){
     glfwInitWindowSize(width, height);
     glfwCreateWindow();
@@ -113,5 +121,6 @@ int main(int, char**){
     init();
     // glfwSwapInterval(0); ///< disable VSYNC (allows framerate>30)
     glfwMainLoop();
+	cleanup();
     return EXIT_SUCCESS;
 }
