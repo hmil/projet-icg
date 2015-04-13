@@ -49,6 +49,8 @@ float noise(vec2 point) {
 float generateMap(vec2 point) {
 	float value = 0.0;
 
+	point = abs(point);
+
 	for (int i = 0; i < octaves; i++) {
 		value += abs(noise(point)) * pow(lacunarity, -H*i);
 		point *= lacunarity;

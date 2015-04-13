@@ -33,14 +33,13 @@ protected:
     GLuint _vbo_position; ///< memory buffer for positions
     GLuint _vbo_index;    ///< memory buffer for indice
     GLuint _pid;          ///< GLSL shader program ID
-    GLuint _tex;          ///< Texture ID
     GLuint _num_indices;  ///< number of vertices to render
 	GLuint _color_tex;
     
 	int grid_dim = 512;
 
 public:    
-    void init(GLuint tex_coord){
+    void init(){
 		
 		// Compile the shaders
 		_pid = opengp::load_shaders("shaders/grid.vert.glsl", "shaders/grid.frag.glsl");
@@ -124,16 +123,6 @@ public:
 		GLuint col_tex_id = glGetUniformLocation(_pid, "color_tex");
 		glUniform1i(col_tex_id, 0 /*GL_TEXTURE0*/);
 
-		_tex = tex_coord;
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, _tex);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		// Texture uniforms
-		GLuint tex_id = glGetUniformLocation(_pid, "tex");
-		glUniform1i(tex_id, 1 /*GL_TEXTURE1*/);
-		
-        
         // to avoid the current object being polluted
         glBindVertexArray(0);
     }
@@ -143,15 +132,12 @@ public:
         glDeleteBuffers(1, &_vbo_index);
         glDeleteVertexArrays(1, &_vao);
         glDeleteProgram(_pid);
-        glDeleteTextures(1, &_tex);
     }
     
-    void draw(const mat4& model, const mat4& view, const mat4& projection, const int resolution){
+    void draw(const mat4& model, const mat4& view, const mat4& projection, const int resolution, GLuint heightmap){
         glUseProgram(_pid);
         glBindVertexArray(_vao);
         // Bind textures
-        glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, _tex);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_1D, _color_tex);
 
@@ -167,6 +153,16 @@ public:
 
 		GLint resolution_id = glGetUniformLocation(_pid, "resolution");
 		glUniform1i(resolution_id, resolution);
+
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, heightmap);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_MIRRORED_REPEAT);
+		// Texture uniforms
+		GLuint tex_id = glGetUniformLocation(_pid, "tex");
+		glUniform1i(tex_id, 1);
 
         // Draw
         glDrawElements(GL_TRIANGLES, _num_indices, GL_UNSIGNED_INT, 0);

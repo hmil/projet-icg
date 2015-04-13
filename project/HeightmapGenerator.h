@@ -94,7 +94,10 @@ public:
 			uni_id = glGetUniformLocation(_pid, "octaves");
 			glUniform1i(uni_id, octaves);
 			GLint offset_id = glGetUniformLocation(_pid, "offset");
-			glUniform2f(offset_id, offset(0), offset(1));
+
+			// We adjust the offset such that the pixel at the borders is shared between two tiles
+			// This avoids the formation of a gap between the tiles
+			glUniform2f(offset_id, offset(0)*(_resolution - 1.0f) / _resolution, offset(1)*(_resolution - 1.0f) / _resolution);
 
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_1D, _grad);

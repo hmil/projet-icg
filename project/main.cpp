@@ -1,24 +1,17 @@
 #include "icg_common.h"
-#include "HeightmapGenerator.h"
-#include "Grid.h"
-#include "FrameBuffer.h"
-#include "Tile.h"
-
-
-#define TEXTURE_SIZE 2048
+#include "Map.h"
 
 int width=1280, height=720;
 
-HeightmapGenerator generator;
-Tile *tile;
-Tile *tile2;
+Map world;
 
-vec3 cam_pos(0, 0.5, -2);
+vec3 cam_pos(1000, 0.5, 1000);
+vec3 cam_look;
 vec2 angles(0, 0);
 vec2 old_angles;
 vec2 old_mouse_pos;
 
-#define MOVE_INC	0.01
+#define MOVE_INC	0.05
 #define KEY_FWD		0
 #define KEY_BWD		1
 #define KEY_LEFT	2
@@ -27,43 +20,15 @@ bool keys[] = { false, false, false, false };
 
 
 void init(){
-    glClearColor(0,0,0, /*solid*/1.0 );    
+    glClearColor(0.90,0.95,1.0, /*solid*/1.0 );    
     glEnable(GL_DEPTH_TEST);
-	
-	generator.init(1024);
-	
 
-	tile = new Tile(&generator, 0, 0);
-	tile2 = new Tile(&generator, 1, 0);
+	world.init(vec2(cam_pos(0), cam_pos(2)));
 
-	tile->generateHeightmap();
-	tile2->generateHeightmap();
 	glViewport(0, 0, width, height);
 }
 
-void display(){ 
-
-	// update pos
-	if (keys[KEY_FWD]) {
-		cam_pos(2) += MOVE_INC*cos(angles(0))*cos(angles(1));
-		cam_pos(1) -= MOVE_INC*sin(angles(1));
-		cam_pos(0) -= MOVE_INC*sin(angles(0))*cos(angles(1));
-	}
-	else if (keys[KEY_BWD]) {
-		cam_pos(2) -= MOVE_INC*cos(angles(0))*cos(angles(1));
-		cam_pos(1) += MOVE_INC*sin(angles(1));
-		cam_pos(0) += MOVE_INC*sin(angles(0))*cos(angles(1));
-	}
-	if (keys[KEY_LEFT]) {
-		cam_pos(2) += MOVE_INC*sin(angles(0))*cos(angles(1));
-		cam_pos(0) += MOVE_INC*cos(angles(0))*cos(angles(1));
-	}
-	else if (keys[KEY_RIGHT]) {
-		cam_pos(2) -= MOVE_INC*sin(angles(0))*cos(angles(1));
-		cam_pos(0) -= MOVE_INC*cos(angles(0))*cos(angles(1));
-	}
-	vec3 cam_look = cam_pos + vec3(0, 0, 1);
-
+void display(){
 
     opengp::update_title_fps("FrameBuffer");   
     glViewport(0,0,width,height);
@@ -82,11 +47,35 @@ void display(){
 	model(1, 3) = -1;
     
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	tile->draw(model, rotation * view, projection, TEXTURE_SIZE);
+	world.draw(model, rotation * view, projection);
+}
 
-	mat4 tr = mat4::Identity();
-	tr(0, 3) = 4;
-	tile2->draw(model * tr, rotation * view, projection, TEXTURE_SIZE);
+void update() {
+
+	// update pos
+	if (keys[KEY_FWD]) {
+		cam_pos(2) += MOVE_INC*cos(angles(0))*cos(angles(1));
+		cam_pos(1) -= MOVE_INC*sin(angles(1));
+		cam_pos(0) -= MOVE_INC*sin(angles(0))*cos(angles(1));
+	}
+	else if (keys[KEY_BWD]) {
+		cam_pos(2) -= MOVE_INC*cos(angles(0))*cos(angles(1));
+		cam_pos(1) += MOVE_INC*sin(angles(1));
+		cam_pos(0) += MOVE_INC*sin(angles(0))*cos(angles(1));
+	}
+	if (keys[KEY_LEFT]) {
+		cam_pos(2) += MOVE_INC*sin(angles(0));
+		cam_pos(0) += MOVE_INC*cos(angles(0));
+	}
+	else if (keys[KEY_RIGHT]) {
+		cam_pos(2) -= MOVE_INC*sin(angles(0));
+		cam_pos(0) -= MOVE_INC*cos(angles(0));
+	}
+	cam_look = cam_pos + vec3(0, 0, 1);
+
+	world.update(vec2(cam_pos(0), cam_pos(2)));
+
+	display();
 }
 
 
@@ -123,49 +112,48 @@ void keyboard(int key, int action) {
 		case 'H': octaves--; break;
 		case 'W':
 			keys[KEY_FWD] = false;
-			break;
+			return;
 		case 'A':
 			keys[KEY_LEFT] = false;
-			break;
+			return;
 		case 'S':
 			keys[KEY_BWD] = false;
-			break;
+			return;
 		case 'D':
 			keys[KEY_RIGHT] = false;
-			break;
+			return;
 		default: return;
 		}
-		tile->generateHeightmap();
+		world.regenerateHeightmap();
 		std::cout << "H=" << H << " lacunarity=" << lacunarity << " octaves=" << octaves << std::endl;
 	}
 	else if (action == GLFW_PRESS) {
 		switch (key) {
 		case 'W': 
 			keys[KEY_FWD] = true;
-			break;
+			return;
 		case 'A': 
 			keys[KEY_LEFT] = true;
-			break;
+			return;
 		case 'S': 
 			keys[KEY_BWD] = true;
-			break;
+			return;
 		case 'D': 
 			keys[KEY_RIGHT] = true;
-			break;
+			return;
 		default: break;
 		}
 	}
 }
 
 void cleanup(){
-	delete(tile);
-	delete(tile2);
+	world.cleanup();
 }
 
 int main(int, char**){
     glfwInitWindowSize(width, height);
     glfwCreateWindow();
-    glfwDisplayFunc(display);
+    glfwDisplayFunc(update);
 	glfwSetMouseButtonCallback(mouse_button);
 	glfwSetMousePosCallback(mouse_pos);
 	glfwSetKeyCallback(keyboard);
