@@ -5,13 +5,15 @@ int width=1280, height=720;
 
 Map world;
 
-vec3 cam_pos(1000, 0.5, 1000);
+vec3 cam_pos(1000, 0.4, 1000);
 vec3 cam_look;
 vec2 angles(0, 0);
 vec2 old_angles;
 vec2 old_mouse_pos;
 
-#define MOVE_INC	0.05
+vec3 sky_color(0.85, 0.90, 0.95);
+
+#define MOVE_INC	0.02
 #define KEY_FWD		0
 #define KEY_BWD		1
 #define KEY_LEFT	2
@@ -20,10 +22,10 @@ bool keys[] = { false, false, false, false };
 
 
 void init(){
-    glClearColor(0.90,0.95,1.0, /*solid*/1.0 );    
+	glClearColor(sky_color(0), sky_color(1), sky_color(2), /*solid*/1.0);
     glEnable(GL_DEPTH_TEST);
 
-	world.init(vec2(cam_pos(0), cam_pos(2)));
+	world.init(vec2(cam_pos(0), cam_pos(2)), sky_color);
 
 	glViewport(0, 0, width, height);
 }

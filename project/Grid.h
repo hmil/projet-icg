@@ -7,7 +7,7 @@ static struct Light{
 	vec3 Id = vec3(0.9f, 0.85f, 0.75f);
 	vec3 Is = vec3(1.0f, 1.0f, 1.0f);
 
-	vec3 light_pos = vec3(0.0f, 4.0f, -2.0f);
+	vec3 light_pos = vec3(0.0f, 100.0f, 0.0f);
 
 	///--- Pass light properties to the shader
 	void setup(GLuint _pid){
@@ -39,7 +39,7 @@ protected:
 	int grid_dim = 512;
 
 public:    
-    void init(){
+	void init(vec3 fogColor){
 		
 		// Compile the shaders
 		_pid = opengp::load_shaders("shaders/grid.vert.glsl", "shaders/grid.frag.glsl");
@@ -122,6 +122,11 @@ public:
 		// Texture uniforms
 		GLuint col_tex_id = glGetUniformLocation(_pid, "color_tex");
 		glUniform1i(col_tex_id, 0 /*GL_TEXTURE0*/);
+
+
+		// fog color
+		GLuint fog_id = glGetUniformLocation(_pid, "fogColor");
+		glUniform3f(fog_id, fogColor(0), fogColor(1), fogColor(2));
 
         // to avoid the current object being polluted
         glBindVertexArray(0);

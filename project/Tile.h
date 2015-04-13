@@ -31,6 +31,11 @@ public:
 		_offset(1) = y;
 	}
 
+	void setCoords(int x, int y) {
+		_offset(0) = x;
+		_offset(1) = y;
+	}
+
 	void generateHeightmap() {
 		_fb.bind();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

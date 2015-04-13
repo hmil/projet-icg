@@ -67,10 +67,11 @@ vec2 computeDiff() {
   float yzm = generateMap(tc+vec2(0, -dstep));
   float yzp = generateMap(tc+vec2(0, dstep));
 
-  return vec2((yxp - yxm + 1)*0.5, (yzp - yzm + 1)*0.5);
+  return vec2((yxm - yxp + 1)*0.5, (yzp - yzm + 1)*0.5);
 }
 
 void main() {
+	// Heightmap in R channel, differences in G & B channels
   color = vec3(generateMap(tc), computeDiff());
 }
 

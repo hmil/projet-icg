@@ -34,16 +34,13 @@ void main() {
   gl_Position = MVP * vec4(vpoint, 1.0);
 
   // phong
-
-  vec4 vpoint_mv = MV * vec4(vpoint, 1.0);
-  gl_Position = projection * vpoint_mv;
   vec3 world_point = vec3(model * vec4(vpoint, 1.0));
 
   /// 1) compute normal_mv using the model_view matrix.
   normal = normalize(vec3(inverse(transpose(model)) * vec4(vnormal, 1.0)));
 
   /// 2) compute the light direction light_dir.
-  light_dir = normalize(vec3(vec4(light_pos, 1.0) - vec4(world_point, 1.0)));
+  light_dir = normalize(vec3(light_pos - world_point));
 
   /// 3) compute the view direction view_dir.
   vec3 camera_pos = vec3(inverse(view) * vec4(0, 0, 0, 1));

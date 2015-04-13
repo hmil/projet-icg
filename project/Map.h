@@ -26,11 +26,11 @@ public:
 
 
 
-	void init(vec2 cam_pos) {
+	void init(vec2 cam_pos, vec3 fogColor) {
 
 		active_cell = cam_pos.cast<int>() / 4;
 
-		grid.init();
+		grid.init(fogColor);
 		generator.init(1024);
 
 		for (int i = 0; i < TILES_SPAN; ++i) {
@@ -55,19 +55,23 @@ public:
 			std::cout << "x transition : old=" << active_cell(0) << " new=" << newCell(0) << std::endl;
 			if (newCell(0) < active_cell(0)) {
 				for (int i = 0; i < TILES_SPAN; ++i) {
-					delete active_tiles[TILES_SPAN-1][i];
+					Tile* tmp = active_tiles[TILES_SPAN-1][i];
 					for (int j = TILES_SPAN-1; j > 0; --j) {
 						active_tiles[j][i] = active_tiles[j-1][i];
 					}
-					active_tiles[0][i] = generateTile(newCell(0) - TILES_SPAN / 2, newCell(1) - TILES_SPAN / 2 + i);
+					active_tiles[0][i] = tmp;
+					tmp->setCoords(newCell(0) - TILES_SPAN / 2, newCell(1) - TILES_SPAN / 2 + i);
+					tmp->generateHeightmap();
 				}
 			} else if (newCell(0) > active_cell(0)) {
 				for (int i = 0; i < TILES_SPAN; ++i) {
-					delete active_tiles[0][i];
+					Tile* tmp = active_tiles[0][i];
 					for (int j = 0; j < TILES_SPAN - 1; ++j) {
 						active_tiles[j][i] = active_tiles[j+1][i];
 					}
-					active_tiles[TILES_SPAN - 1][i] = generateTile(newCell(0) + TILES_SPAN / 2, newCell(1) - TILES_SPAN / 2 + i);
+					active_tiles[TILES_SPAN - 1][i] = tmp;
+					tmp->setCoords(newCell(0) + TILES_SPAN / 2, newCell(1) - TILES_SPAN / 2 + i);
+					tmp->generateHeightmap();
 				}
 			}
 		}
@@ -75,20 +79,24 @@ public:
 			std::cout << "y transition : old=" << active_cell(1) << " new=" << newCell(1) << std::endl;
 			if (newCell(1) < active_cell(1)) {
 				for (int i = 0; i < TILES_SPAN; ++i) {
-					delete active_tiles[i][TILES_SPAN-1];
+					Tile *tmp = active_tiles[i][TILES_SPAN-1];
 					for (int j = TILES_SPAN - 1; j > 0; --j) {
 						active_tiles[i][j] = active_tiles[i][j - 1];
 					}
-					active_tiles[i][0] = generateTile(newCell(0) - TILES_SPAN / 2 + i, newCell(1) - TILES_SPAN / 2);
+					active_tiles[i][0] = tmp;
+					tmp->setCoords(newCell(0) - TILES_SPAN / 2 + i, newCell(1) - TILES_SPAN / 2);
+					tmp->generateHeightmap();
 				}
 			}
 			else if (newCell(1) > active_cell(1)) {
 				for (int i = 0; i < TILES_SPAN; ++i) {
-					delete active_tiles[i][0];
+					Tile *tmp = active_tiles[i][0];
 					for (int j = 0; j < TILES_SPAN - 1; ++j) {
 						active_tiles[i][j] = active_tiles[i][j + 1];
 					}
-					active_tiles[i][TILES_SPAN-1] = generateTile(newCell(0) - TILES_SPAN / 2 + i, newCell(1) + TILES_SPAN / 2);
+					active_tiles[i][TILES_SPAN - 1] = tmp;
+					tmp->setCoords(newCell(0) - TILES_SPAN / 2 + i, newCell(1) + TILES_SPAN / 2);
+					tmp->generateHeightmap();
 				}
 			}
 		}
@@ -99,12 +107,13 @@ public:
 	void draw(const mat4 &model, const mat4 &view, const mat4 &projection) {
 		mat4 tr = mat4::Identity();
 
-		tr(2, 2) = -1;
+		tr(2, 2) = -1; // flip on z axis
 		
+		// Render the TILES_SPAN*TILES_SPAN grid centered around the camera
 		for (int i = 0; i < TILES_SPAN; ++i) {
 			for (int j = 0; j < TILES_SPAN; ++j) {
-				tr(0, 3) = 4 * (active_cell(0) + i - 1) + 2;
-				tr(2, 3) = 4 * (active_cell(1) + j - 1) + 2;
+				tr(0, 3) = 4 * (active_cell(0) + i - TILES_SPAN / 2) + 2;
+				tr(2, 3) = 4 * (active_cell(1) + j - TILES_SPAN / 2) + 2;
 				active_tiles[i][j]->draw(model * tr, view, projection, TEXTURE_SIZE);
 			}
 		}
