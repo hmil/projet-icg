@@ -3,8 +3,7 @@
 #include "HeightmapGenerator.h"
 #include "Tile.h"
 
-#define TEXTURE_SIZE 2048
-
+#define TEXTURE_SIZE 1024
 #define TILES_SPAN	5
 
 class Map
@@ -106,7 +105,6 @@ public:
 
 	void draw(const mat4 &model, const mat4 &view, const mat4 &projection) {
 		mat4 tr = mat4::Identity();
-
 		tr(2, 2) = -1; // flip on z axis
 		
 		// Render the TILES_SPAN*TILES_SPAN grid centered around the camera
@@ -114,6 +112,7 @@ public:
 			for (int j = 0; j < TILES_SPAN; ++j) {
 				tr(0, 3) = 4 * (active_cell(0) + i - TILES_SPAN / 2) + 2;
 				tr(2, 3) = 4 * (active_cell(1) + j - TILES_SPAN / 2) + 2;
+
 				active_tiles[i][j]->draw(model * tr, view, projection, TEXTURE_SIZE);
 			}
 		}

@@ -33,4 +33,5 @@ void main() {
   */
 
   color = mix(finalColor, fogColor, fogAmount);
+  //color = vec3(0, texture(tex, uv).gb);
 }

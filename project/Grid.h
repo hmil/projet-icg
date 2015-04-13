@@ -4,10 +4,10 @@
 
 static struct Light{
 	vec3 Ia = vec3(0.1f, 0.1f, 0.1f);
-	vec3 Id = vec3(0.9f, 0.85f, 0.75f);
+	vec3 Id = vec3(0.85f, 0.9f, 1.0f);
 	vec3 Is = vec3(1.0f, 1.0f, 1.0f);
 
-	vec3 light_pos = vec3(0.0f, 100.0f, 0.0f);
+	vec3 light_pos = vec3(0.0f, 5000.0f, 0.0f);
 
 	///--- Pass light properties to the shader
 	void setup(GLuint _pid){

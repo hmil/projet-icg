@@ -44,8 +44,8 @@ public:
 		{
 			std::vector<GLfloat> gradients;
 
-			srand(time(NULL));
-			// srand(1234); // deterministic for debugging purpose
+			// srand(time(NULL));
+			srand(1337); // deterministic for debugging purpose
 
 			for (int i = 0; i < resolution; ++i) {
 				gradients.push_back((float)rand() / RAND_MAX - 0.5); // x

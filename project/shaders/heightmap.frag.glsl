@@ -47,12 +47,16 @@ float noise(vec2 point) {
 }
 
 float generateMap(vec2 point) {
-	float value = 0.0;
+	float value = 0;
+	float hcoeff = 0;
 
-	point = abs(point);
+	point = abs(point) + vec3(noise(point), noise(point+1.12), noise(point+2.74))/3;
 
 	for (int i = 0; i < octaves; i++) {
-		value += abs(noise(point)) * pow(lacunarity, -H*i);
+		// Use twice absolute value instead of normal noise
+		// This gives us sharp peaks that look good.
+		// We need to double it because we louse amplitude when taking abs value.
+		value += abs(noise(point)) * 2 * pow(lacunarity, -H*i);
 		point *= lacunarity;
 	}
 	return 1 - value;
@@ -67,7 +71,8 @@ vec2 computeDiff() {
   float yzm = generateMap(tc+vec2(0, -dstep));
   float yzp = generateMap(tc+vec2(0, dstep));
 
-  return vec2((yxm - yxp + 1)*0.5, (yzp - yzm + 1)*0.5);
+  // The differences are tiny so we amplify them to better use the float precision
+  return vec2((yxm - yxp+0.02)*25, (yzp - yzm + 0.02)*25);
 }
 
 void main() {

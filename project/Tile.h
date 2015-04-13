@@ -7,9 +7,9 @@
 #define TEXTURE_SIZE 1024
 
 
-float H = 0.85f;
-float lacunarity = 2;
-int octaves = 8;
+float H = 1.15f;
+float lacunarity = 3.0997;
+int octaves = 6;
 
 class Tile {
 private:

@@ -13,6 +13,9 @@ out vec3 normal;
 out vec3 light_dir;
 out vec3 view_dir;
 
+// Used to scale the step according to heightmap normals amplification
+#define NORMAL_AMP  25.0
+
 uniform int resolution;
 
 void main() {
@@ -26,9 +29,10 @@ void main() {
   vec3 vpoint = vec3(position.x, height, -position.y);
 
   vec2 diffs = texture(tex, uv).gb;
-  float dstep = 1.0/resolution;
-  vec3 dx = normalize(vec3(dstep, diffs.x * 2 - 1, 0));
-  vec3 dz = normalize(vec3(0, diffs.y * 2 - 1, dstep));
+  float dstep = NORMAL_AMP/resolution;
+
+  vec3 dx = normalize(vec3(dstep, diffs.x - 0.5, 0));
+  vec3 dz = normalize(vec3(0, diffs.y - 0.5, dstep));
   vec3 vnormal = normalize(cross(dz, dx));
 
   gl_Position = MVP * vec4(vpoint, 1.0);
