@@ -41,6 +41,7 @@ protected:
 
 public:    
     void init(GLuint tex_coord){
+		
 		// Compile the shaders
 		_pid = opengp::load_shaders("shaders/grid.vert.glsl", "shaders/grid.frag.glsl");
         if(!_pid) exit(EXIT_FAILURE);       
@@ -58,13 +59,13 @@ public:
 
             // The given code below are the vertices for a simple quad.
             // Your grid should have the same dimension as that quad, i.e.,
-            // reach from [-1, -1] to [1, 1].
+            // reach from [-2, -2] to [2, 2].
 
             // Vertex position of the triangles.
-			float step = 2.0f / grid_dim;
+			float step = 4.0f / grid_dim;
 			for (int i = 0; i < grid_dim+1; ++i) {
 				for (int j = 0; j < grid_dim+1; ++j) {
-					vertices.push_back(-1.0f + step*i);	vertices.push_back(-1.0f + step*j);
+					vertices.push_back(-2.0f + step*i);	vertices.push_back(-2.0f + step*j);
 				}
 			}
             

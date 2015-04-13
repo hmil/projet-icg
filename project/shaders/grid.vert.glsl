@@ -20,7 +20,7 @@ void main() {
   mat4 MVP = projection * MV;
 
 
-  uv = (position + vec2(1.0, 1.0)) * 0.5;
+  uv = (position + vec2(2.0, 2.0)) * 0.25;
 
   float height = texture(tex, uv).r;
   vec3 vpoint = vec3(position.x, height, -position.y);

@@ -1,5 +1,6 @@
 #pragma once
 #include "icg_common.h"
+#include <time.h>
 
 class HeightmapGenerator {
 protected:
@@ -43,7 +44,8 @@ public:
 		{
 			std::vector<GLfloat> gradients;
 
-			srand(1234); // deterministic for debugging purpose
+			srand(time(NULL));
+			// srand(1234); // deterministic for debugging purpose
 
 			for (int i = 0; i < resolution; ++i) {
 				gradients.push_back((float)rand() / RAND_MAX - 0.5); // x
@@ -77,7 +79,7 @@ public:
 		glDeleteTextures(1, &_grad);
     }
     
-	void drawHeights(float H, float lacunarity, int octaves){
+	void drawHeights(float H, float lacunarity, int octaves, vec2 offset){
         glUseProgram(_pid);
         glBindVertexArray(_vao);
 		
@@ -91,6 +93,8 @@ public:
 			glUniform1f(uni_id, lacunarity);
 			uni_id = glGetUniformLocation(_pid, "octaves");
 			glUniform1i(uni_id, octaves);
+			GLint offset_id = glGetUniformLocation(_pid, "offset");
+			glUniform2f(offset_id, offset(0), offset(1));
 
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_1D, _grad);
