@@ -50,7 +50,7 @@ float generateMap(vec2 point) {
 	float value = 0;
 	float hcoeff = 0;
 
-	point = abs(point) + vec3(noise(point), noise(point+1.12), noise(point+2.74))/3;
+	point = abs(point) + vec2(noise(point), noise(point+1.12))/3;
 
 	for (int i = 0; i < octaves; i++) {
 		// Use twice absolute value instead of normal noise
