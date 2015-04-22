@@ -12,6 +12,7 @@ private:
 	HeightmapGenerator generator;
 	Grid grid;
 	Vec2i active_cell;
+	vec2 _cam_pos;
 	Tile* active_tiles[TILES_SPAN][TILES_SPAN];
 
 
@@ -26,7 +27,7 @@ public:
 
 
 	void init(vec2 cam_pos, vec3 fogColor) {
-
+		_cam_pos = cam_pos;
 		active_cell = cam_pos.cast<int>() / 4;
 
 		grid.init(fogColor);
@@ -48,6 +49,7 @@ public:
 	}
 
 	void update(const vec2 cam_pos) {
+		_cam_pos = cam_pos;
 		Vec2i newCell = cam_pos.cast<int>() / 4;
 		
 		if (newCell(0) != active_cell(0)) {
@@ -110,10 +112,22 @@ public:
 		// Render the TILES_SPAN*TILES_SPAN grid centered around the camera
 		for (int i = 0; i < TILES_SPAN; ++i) {
 			for (int j = 0; j < TILES_SPAN; ++j) {
-				tr(0, 3) = 4 * (active_cell(0) + i - TILES_SPAN / 2) + 2;
-				tr(2, 3) = 4 * (active_cell(1) + j - TILES_SPAN / 2) + 2;
 
-				active_tiles[i][j]->draw(model * tr, view, projection, TEXTURE_SIZE);
+				float pos_x = 4 * (active_cell(0) + i - TILES_SPAN / 2) + 2;
+				float pos_y = 4 * (active_cell(1) + j - TILES_SPAN / 2) + 2;
+			
+				tr(0, 3) = pos_x;
+				tr(2, 3) = pos_y;
+
+				float dx = (_cam_pos(0) - pos_x);
+				float dy = (_cam_pos(1) - pos_y);
+				float dist = sqrt(dx*dx + dy*dy);
+				Grid::Definition def;
+				if (dist <= 6) def = Grid::HIGH_DEF;
+				else if (dist <= 12) def = Grid::MEDIUM_DEF;
+				else def = Grid::LOW_DEF;
+
+				active_tiles[i][j]->draw(model * tr, view, projection, TEXTURE_SIZE, def);
 			}
 		}
 	}

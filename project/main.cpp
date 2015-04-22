@@ -5,7 +5,7 @@ int width=1280, height=720;
 
 Map world;
 
-vec3 cam_pos(2056, 0.4, 2056);
+vec3 cam_pos(2116, 0.4, 2113);
 vec3 cam_look;
 vec2 angles(0, 0);
 vec2 old_angles;
@@ -13,7 +13,7 @@ vec2 old_mouse_pos;
 
 vec3 sky_color(0.85, 0.90, 0.95);
 
-#define MOVE_INC	0.01
+#define MOVE_INC	0.02
 #define KEY_FWD		0
 #define KEY_BWD		1
 #define KEY_LEFT	2
@@ -37,7 +37,7 @@ void display(){
     
     ///--- Setup view-projection matrix
     float ratio = width / (float) height;
-    static mat4 projection = Eigen::perspective(45.0f, ratio, 0.1f, 10.0f);
+    static mat4 projection = Eigen::perspective(45.0f, ratio, 0.02f, 10.0f);
     vec3 cam_up(0.0f, 1.0f, 0.0f);
 
 	mat4 rotation = mat4::Identity();
@@ -159,7 +159,7 @@ int main(int, char**){
 	glfwSetMouseButtonCallback(mouse_button);
 	glfwSetMousePosCallback(mouse_pos);
 	glfwSetKeyCallback(keyboard);
-	glEnable(GL_CULL_FACE);
+	//glEnable(GL_CULL_FACE);
     init();
     // glfwSwapInterval(0); ///< disable VSYNC (allows framerate>30)
     glfwMainLoop();

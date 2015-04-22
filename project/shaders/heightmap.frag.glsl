@@ -46,6 +46,12 @@ float noise(vec2 point) {
 	return mix(st, uv, f(a.y));
 }
 
+// Sphere for debugging
+/*float generateMap(vec2 point) {
+	point = point * 4;
+	return max(0, sqrt(1-(point.x*point.x+point.y*point.y)));
+}*/
+
 float generateMap(vec2 point) {
 	float value = 0;
 	float hcoeff = 0;
@@ -56,7 +62,7 @@ float generateMap(vec2 point) {
 		// Use twice absolute value instead of normal noise
 		// This gives us sharp peaks that look good.
 		// We need to double it because we louse amplitude when taking abs value.
-		value += abs(noise(point)) * 2 * pow(lacunarity, -H*i);
+		value += abs(noise(point)) * 1.5 * pow(lacunarity, -H*i);
 		point *= lacunarity;
 	}
 	return 1 - value;

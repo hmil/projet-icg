@@ -7,7 +7,7 @@ static struct Light{
 	vec3 Id = vec3(0.85f, 0.9f, 1.0f);
 	vec3 Is = vec3(1.0f, 1.0f, 1.0f);
 
-	vec3 light_pos = vec3(0.0f, 5000.0f, 0.0f);
+	vec3 light_pos = vec3(2.0f, 2000.0f, 0.0);
 
 	///--- Pass light properties to the shader
 	void setup(GLuint _pid){
@@ -29,16 +29,49 @@ static struct Light{
 
 class Grid : public Light{
 protected:
-    GLuint _vao;          ///< vertex array object
-    GLuint _vbo_position; ///< memory buffer for positions
-    GLuint _vbo_index;    ///< memory buffer for indice
+    GLuint _vaos[3];          ///< vertex array object
+    GLuint _vbo_positions[3]; ///< memory buffer for positions
+    GLuint _vbo_indexes[3];    ///< memory buffer for indice
+
     GLuint _pid;          ///< GLSL shader program ID
-    GLuint _num_indices;  ///< number of vertices to render
 	GLuint _color_tex;
     
-	int grid_dim = 512;
+	int grid_dim[3];
 
-public:    
+
+	void generateGrid(std::vector<GLfloat> &vertices, std::vector<GLuint> &indices, int dim) {
+		float step = 4.0f / dim;
+		for (int i = 0; i < dim + 1; ++i) {
+			for (int j = 0; j < dim + 1; ++j) {
+				vertices.push_back(-2.0f + step*i);	vertices.push_back(-2.0f + step*j);
+			}
+		}
+
+
+		// And indices.
+		for (int i = 0; i < dim; ++i) {
+			for (int j = 0; j < dim; ++j) {
+				indices.push_back((dim + 1) * i + j);
+				indices.push_back((dim + 1) * i + j + 1);
+				indices.push_back((dim + 1) * (i + 1) + j);
+				indices.push_back((dim + 1) * (i + 1) + j);
+				indices.push_back((dim + 1) * i + j + 1);
+				indices.push_back((dim + 1) * (i + 1) + j + 1);
+			}
+		}
+	}
+
+public:
+
+	enum Definition { HIGH_DEF, MEDIUM_DEF, LOW_DEF };
+
+	Grid()
+	{
+		grid_dim[HIGH_DEF] = 512;
+		grid_dim[MEDIUM_DEF] = 256;
+		grid_dim[LOW_DEF] = 64;
+	}
+
 	void init(vec3 fogColor){
 		
 		// Compile the shaders
@@ -46,58 +79,30 @@ public:
         if(!_pid) exit(EXIT_FAILURE);       
         glUseProgram(_pid);
         
-        // Vertex one vertex Array
-        glGenVertexArrays(1, &_vao);
-        glBindVertexArray(_vao);
      
         // Vertex coordinates and indices
-        {
-            std::vector<GLfloat> vertices;
-            std::vector<GLuint> indices;
-            // Always two subsequent entries in 'vertices' form a 2D vertex position.
+        GLuint loc_position = glGetAttribLocation(_pid, "position");
 
-            // The given code below are the vertices for a simple quad.
-            // Your grid should have the same dimension as that quad, i.e.,
-            // reach from [-2, -2] to [2, 2].
+			
+		for (int i = 0; i < 3; ++i) {
+			std::vector<GLfloat> vertices;
+			std::vector<GLuint> indices;
 
-            // Vertex position of the triangles.
-			float step = 4.0f / grid_dim;
-			for (int i = 0; i < grid_dim+1; ++i) {
-				for (int j = 0; j < grid_dim+1; ++j) {
-					vertices.push_back(-2.0f + step*i);	vertices.push_back(-2.0f + step*j);
-				}
-			}
-            
-
-            // And indices.
-			for (int i = 0; i < grid_dim ; ++i) {
-				for (int j = 0; j < grid_dim ; ++j) {
-					indices.push_back((grid_dim+1) * i + j);
-					indices.push_back((grid_dim + 1) * i + j + 1);
-					indices.push_back((grid_dim + 1) * (i + 1) + j);
-					indices.push_back((grid_dim + 1) * (i + 1) + j);
-					indices.push_back((grid_dim + 1) * i + j + 1);
-					indices.push_back((grid_dim + 1) * (i + 1) + j + 1);
-				}
-			}
-            
-
-            _num_indices = indices.size();
-
-            // position buffer
-            glGenBuffers(1, &_vbo_position);
-            glBindBuffer(GL_ARRAY_BUFFER, _vbo_position);
-            glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(GLfloat), &vertices[0], GL_STATIC_DRAW);
-
-            // vertex indices
-            glGenBuffers(1, &_vbo_index);
-            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _vbo_index);
-            glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint), &indices[0], GL_STATIC_DRAW);
-
-            // position shader attribute
-            GLuint loc_position = glGetAttribLocation(_pid, "position");
-            glEnableVertexAttribArray(loc_position);
-            glVertexAttribPointer(loc_position, 2, GL_FLOAT, DONT_NORMALIZE, ZERO_STRIDE, ZERO_BUFFER_OFFSET);
+			// Vertex one vertex Array
+			glGenVertexArrays(1, &_vaos[i]);
+			glBindVertexArray(_vaos[i]);
+			generateGrid(vertices, indices, grid_dim[i]);
+			// position buffer
+			glGenBuffers(1, &_vbo_positions[i]);
+			glBindBuffer(GL_ARRAY_BUFFER, _vbo_positions[i]);
+			glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(GLfloat), &vertices[0], GL_STATIC_DRAW);
+			// vertex indices
+			glGenBuffers(1, &_vbo_indexes[i]);
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _vbo_indexes[i]);
+			glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint), &indices[0], GL_STATIC_DRAW);
+			// position shader attribute
+			glEnableVertexAttribArray(loc_position);
+			glVertexAttribPointer(loc_position, 2, GL_FLOAT, DONT_NORMALIZE, ZERO_STRIDE, ZERO_BUFFER_OFFSET);
         }
 
 		// Load texture
@@ -133,15 +138,17 @@ public:
     }
            
     void cleanup(){
-        glDeleteBuffers(1, &_vbo_position);
-        glDeleteBuffers(1, &_vbo_index);
-        glDeleteVertexArrays(1, &_vao);
+		for (int i = 0; i < 3; ++i) {
+			glDeleteBuffers(1, &_vbo_positions[i]);
+			glDeleteBuffers(1, &_vbo_indexes[i]);
+			glDeleteVertexArrays(1, &_vaos[i]);
+		}
         glDeleteProgram(_pid);
     }
     
-    void draw(const mat4& model, const mat4& view, const mat4& projection, const int resolution, GLuint heightmap){
+    void draw(const mat4& model, const mat4& view, const mat4& projection, const int resolution, GLuint heightmap, Definition def){
         glUseProgram(_pid);
-        glBindVertexArray(_vao);
+        glBindVertexArray(_vaos[def]);
         // Bind textures
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_1D, _color_tex);
@@ -170,7 +177,9 @@ public:
 		glUniform1i(tex_id, 1);
 
         // Draw
-        glDrawElements(GL_TRIANGLES, _num_indices, GL_UNSIGNED_INT, 0);
+		
+		int num_indices = 6 * grid_dim[def] * grid_dim[def];
+		glDrawElements(GL_TRIANGLES, num_indices, GL_UNSIGNED_INT, 0);
         glBindVertexArray(0);        
         glUseProgram(0);
     }
