@@ -5,7 +5,7 @@ int width=1280, height=720;
 
 Map world;
 
-vec3 cam_pos(2116, 0.4, 2113);
+vec3 cam_pos(2106, 0.4, 2123);
 vec3 cam_look;
 vec2 angles(0, 0);
 vec2 old_angles;
@@ -13,7 +13,7 @@ vec2 old_mouse_pos;
 
 vec3 sky_color(0.85, 0.90, 0.95);
 
-#define MOVE_INC	0.02
+#define MOVE_INC	0.015
 #define KEY_FWD		0
 #define KEY_BWD		1
 #define KEY_LEFT	2
@@ -159,7 +159,7 @@ int main(int, char**){
 	glfwSetMouseButtonCallback(mouse_button);
 	glfwSetMousePosCallback(mouse_pos);
 	glfwSetKeyCallback(keyboard);
-	//glEnable(GL_CULL_FACE);
+    glEnable(GL_CULL_FACE);
     init();
     // glfwSwapInterval(0); ///< disable VSYNC (allows framerate>30)
     glfwMainLoop();

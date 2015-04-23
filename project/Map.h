@@ -23,9 +23,6 @@ private:
 	}
 
 public:
-
-
-
 	void init(vec2 cam_pos, vec3 fogColor) {
 		_cam_pos = cam_pos;
 		active_cell = cam_pos.cast<int>() / 4;
@@ -36,7 +33,7 @@ public:
 		for (int i = 0; i < TILES_SPAN; ++i) {
 			for (int j = 0; j < TILES_SPAN; ++j) {
 				active_tiles[i][j] = generateTile(active_cell(0) + i - TILES_SPAN / 2, active_cell(1) + j - TILES_SPAN/2);
-			}
+            }
 		}
 	}
 
@@ -52,6 +49,7 @@ public:
 		_cam_pos = cam_pos;
 		Vec2i newCell = cam_pos.cast<int>() / 4;
 		
+        // Move the map by recycling tiles that are now too far away
 		if (newCell(0) != active_cell(0)) {
 			std::cout << "x transition : old=" << active_cell(0) << " new=" << newCell(0) << std::endl;
 			if (newCell(0) < active_cell(0)) {
@@ -101,11 +99,14 @@ public:
 				}
 			}
 		}
+        // ---
 
 		active_cell = newCell;
 	}
 
 	void draw(const mat4 &model, const mat4 &view, const mat4 &projection) {
+
+        // Matrix to transform each tile
 		mat4 tr = mat4::Identity();
 		tr(2, 2) = -1; // flip on z axis
 		
@@ -115,10 +116,13 @@ public:
 
 				float pos_x = 4 * (active_cell(0) + i - TILES_SPAN / 2) + 2;
 				float pos_y = 4 * (active_cell(1) + j - TILES_SPAN / 2) + 2;
-			
+
+                // translate to appropriate pos
 				tr(0, 3) = pos_x;
 				tr(2, 3) = pos_y;
 
+
+                // Compute LOD depending on distance
 				float dx = (_cam_pos(0) - pos_x);
 				float dy = (_cam_pos(1) - pos_y);
 				float dist = sqrt(dx*dx + dy*dy);
