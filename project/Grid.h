@@ -109,58 +109,52 @@ public:
         // Load textures
         /***************************/
 
+		// common texture parameters
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		// Use trilinear interpolation for minification
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+		// Use bilinear interpolation for magnification
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
 		
         //// Grass
         glActiveTexture(GL_TEXTURE1);
         glGenTextures(1, &_grass_tex);
         glBindTexture(GL_TEXTURE_2D, _grass_tex);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE);
-        glfwLoadTexture2D("textures/grass.tga", 0);
+		glfwLoadTexture2D("textures/grass.tga", 0);
+		glGenerateMipmap(GL_TEXTURE_2D);
 
         // Rock
         glActiveTexture(GL_TEXTURE2);
         glGenTextures(1, &_rock_tex);
         glBindTexture(GL_TEXTURE_2D, _rock_tex);
         glfwLoadTexture2D("textures/rock.tga", 0);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glGenerateMipmap(GL_TEXTURE_2D);
 
         // Snow
         glActiveTexture(GL_TEXTURE3);
         glGenTextures(1, &_snow_tex);
         glBindTexture(GL_TEXTURE_2D, _snow_tex);
         glfwLoadTexture2D("textures/snow.tga", 0);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glGenerateMipmap(GL_TEXTURE_2D);
 
         // Sand
         glActiveTexture(GL_TEXTURE4);
         glGenTextures(1, &_sand_tex);
         glBindTexture(GL_TEXTURE_2D, _sand_tex);
         glfwLoadTexture2D("textures/sand.tga", 0);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glGenerateMipmap(GL_TEXTURE_2D);
 
 		// Texture uniforms
         GLuint tex_id = glGetUniformLocation(_pid, "grass_tex");
         glUniform1i(tex_id, 1 /*GL_TEXTURE1*/);
-
         tex_id = glGetUniformLocation(_pid, "rock_tex");
         glUniform1i(tex_id, 2 /*GL_TEXTURE2*/);
-
         tex_id = glGetUniformLocation(_pid, "snow_tex");
         glUniform1i(tex_id, 3 /*GL_TEXTURE3*/);
-
         tex_id = glGetUniformLocation(_pid, "sand_tex");
         glUniform1i(tex_id, 4 /*GL_TEXTURE4*/);
 

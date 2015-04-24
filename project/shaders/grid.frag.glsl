@@ -20,13 +20,13 @@ in vec4 gl_FragCoord;
 
 out vec3 color;
 
-const float SNOW_INTERP_FACTOR = 30;
+const float SNOW_INTERP_FACTOR = 100;
 const float GRASS_INTERP_FACTOR = 100;
-const float SAND_INTERP_FACTOR = 100;
+const float SAND_INTERP_FACTOR = 200;
 const float ROCK_INTERP_FACTOR = 40;
 
-const float GRASS_MIN_HEIGHT = 0.35; // Also water level
-const float SNOW_MIN_HEIGHT = 0.7;
+const float GRASS_MIN_HEIGHT = 0.3; // Also water level
+const float SNOW_MIN_HEIGHT = 0.65;
 const float SNOW_VARIANCE = 0.09;
 
 const float SLOPE_THRESHOLD = 0.25;
@@ -39,8 +39,12 @@ void main() {
 
   float grassAmount = 0, rockAmount = 0, sandAmount = 0, snowAmount = 0;
 
-  // add some variation to snow level for realism
-  float snowActualHeight = SNOW_MIN_HEIGHT + sin((uv.x+uv.y)*20*M_PI+slope) * slope * SNOW_VARIANCE;
+  // add some distortion to snow level for realism
+  float snow_spatial_dist = sin((uv.x*uv.y)*20*M_PI + slope);
+  float snow_slope_dist = (slope * slope * 10);
+  float snowActualHeight = SNOW_MIN_HEIGHT + SNOW_VARIANCE * snow_spatial_dist * snow_slope_dist;
+
+
   float slopeActualThreshold = (1 - 0.2*height) * SLOPE_THRESHOLD;
 
   rockAmount = clamp(ROCK_INTERP_FACTOR*(slope - slopeActualThreshold), 0, 1);
@@ -48,8 +52,11 @@ void main() {
   grassAmount = clamp(GRASS_INTERP_FACTOR*(height-GRASS_MIN_HEIGHT), 0, 1);
   sandAmount = 1 - grassAmount;
   rockAmount = clamp(rockAmount - sandAmount, 0, 1); // There's no rock underwater
+  // In case rock is at snow level, we "freeze" it with some snow:
+  rockAmount = clamp(rockAmount - clamp(height - snowActualHeight, 0, 1), 0, 1);
+  // no snow on rock
+  snowAmount = clamp(snowAmount - rockAmount, 0, 1);
   grassAmount = clamp(grassAmount - snowAmount - rockAmount, 0, 1); // There's no grass on rock
-  snowAmount = clamp(snowAmount - rockAmount + (height - snowActualHeight), 0, 1);
 
 
   vec3 baseColor =
