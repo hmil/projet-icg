@@ -1,13 +1,20 @@
 #include "icg_common.h"
 #include "Map.h"
+#include "FrameBuffer.h"
+#include "Water.h"
+#include "ScreenQuad.h"
 
 int width=1280, height=720;
 
 Map world;
+Water water;
+FrameBuffer fb_main(width, height);
+FrameBuffer fb_mirrored(width, height);
+ScreenQuad sqad;
 
-vec3 cam_pos(2106, 0.4, 2123);
+vec3 cam_pos(2103, 1, 2125);
 vec3 cam_look;
-vec2 angles(0, 0);
+vec2 angles(0, 0); 
 vec2 old_angles;
 vec2 old_mouse_pos;
 
@@ -20,12 +27,18 @@ vec3 sky_color(0.85, 0.90, 0.95);
 #define KEY_RIGHT	3
 bool keys[] = { false, false, false, false };
 
-
 void init(){
 	glClearColor(sky_color(0), sky_color(1), sky_color(2), /*solid*/1.0);
     glEnable(GL_DEPTH_TEST);
 
 	world.init(vec2(cam_pos(0), cam_pos(2)), sky_color);
+	GLuint fb_main_tex = fb_main.init(true);
+	GLuint fb_mirr_tex = fb_mirrored.init(true);
+	water.init(fb_main_tex, fb_mirr_tex);
+
+	sqad.init(fb_main_tex);
+
+
 
 	glViewport(0, 0, width, height);
 }
@@ -34,22 +47,51 @@ void display(){
 
     opengp::update_title_fps("FrameBuffer");   
     glViewport(0,0,width,height);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     
     ///--- Setup view-projection matrix
     float ratio = width / (float) height;
     static mat4 projection = Eigen::perspective(45.0f, ratio, 0.02f, 10.0f);
     vec3 cam_up(0.0f, 1.0f, 0.0f);
 
-	mat4 rotation = mat4::Identity();
-	rotation.block(0, 0, 3, 3) = Eigen::AngleAxisf(angles(1), vec3::UnitX()).matrix() * Eigen::AngleAxisf(angles(0), vec3::UnitY()).matrix();
-
-    mat4 view = Eigen::lookAt(cam_pos, cam_look, cam_up);
-
 	mat4 model = mat4::Identity();
-	model(1, 3) = -1;
+	// For simplicity: water is at height 0
+	// And the whole map is translated down by water_level units
+	// TODO: move hardcoded water level smw else
+	model(1, 3) = -0.3f;
     
+	// mirror camera
+	cam_look(0) = cam_pos(0) - sin(angles(0))*cos(angles(1));
+	cam_look(2) = cam_pos(2) + cos(angles(0))*cos(angles(1));
+	cam_look(1) = cam_pos(1) - sin(angles(1));
+	mat4 view = Eigen::lookAt(cam_pos, cam_look, cam_up);
+	cam_pos(1) = -cam_pos(1);
+	cam_look(1) = -cam_look(1);
+	mat4 mirrored_view = Eigen::lookAt(cam_pos, cam_look, cam_up);
+	cam_pos(1) = -cam_pos(1); // reset cam pos
+	
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	world.draw(model, rotation * view, projection);
+	fb_mirrored.bind();
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		world.draw(model, mirrored_view, projection);
+		
+	fb_mirrored.unbind();
+
+	fb_main.bind();
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		world.draw(model, view, projection);
+	fb_main.unbind();
+
+	world.draw(model, view, projection);
+
+	mat4 waterModel = mat4::Identity();
+	waterModel(0, 3) = cam_pos(0);
+	waterModel(2, 3) = cam_pos(2);
+	waterModel(1, 3) = 0;
+	water.draw(projection*view*waterModel);
+
+
+	//sqad.draw();
 }
 
 void update() {
@@ -150,6 +192,8 @@ void keyboard(int key, int action) {
 
 void cleanup(){
 	world.cleanup();
+	fb_main.cleanup();
+	fb_mirrored.cleanup();
 }
 
 int main(int, char**){
@@ -159,7 +203,6 @@ int main(int, char**){
 	glfwSetMouseButtonCallback(mouse_button);
 	glfwSetMousePosCallback(mouse_pos);
 	glfwSetKeyCallback(keyboard);
-    glEnable(GL_CULL_FACE);
     init();
     // glfwSwapInterval(0); ///< disable VSYNC (allows framerate>30)
     glfwMainLoop();

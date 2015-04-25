@@ -16,6 +16,8 @@ out vec3 view_dir;
 // Used to scale the step according to heightmap normals amplification
 #define NORMAL_AMP  25.0
 
+#define SEAM_LENGTH 0.005
+
 uniform int resolution;
 
 void main() {
@@ -43,18 +45,17 @@ void main() {
 
   // Dirty hack to avoid appearence of gaps between tiles
   if (position.x >= 1.999999) {
-    vpoint += vec3(0.01, -0.01, 0);
+    vpoint += vec3(SEAM_LENGTH, -SEAM_LENGTH, 0);
   } else if (position.x <= -1.999999) {
-    vpoint += vec3(-0.01, -0.01, 0);
+    vpoint += vec3(-SEAM_LENGTH, -SEAM_LENGTH, 0);
   }
   if (position.y >= 1.999999) {
-    vpoint += vec3(0, -0.01, -0.01);
+    vpoint += vec3(0, -SEAM_LENGTH, -SEAM_LENGTH);
   } else if (position.y <= -1.999999) {
-    vpoint += vec3(0, -0.01, 0.01);
+    vpoint += vec3(0, -SEAM_LENGTH, SEAM_LENGTH);
   }
 
   gl_Position = MVP * vec4(vpoint, 1.0);
-
 
   vec3 world_point = vec3(model * vec4(vpoint, 1.0));
   /// 2) compute the light direction light_dir.

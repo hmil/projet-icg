@@ -184,8 +184,16 @@ public:
         glUseProgram(_pid);
         glBindVertexArray(_vaos[def]);
         // Bind textures
-		glActiveTexture(GL_TEXTURE0);
+        glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, heightmap);
+		glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, _grass_tex);
+		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_2D, _rock_tex);
+		glActiveTexture(GL_TEXTURE3);
+		glBindTexture(GL_TEXTURE_2D, _snow_tex);
+		glActiveTexture(GL_TEXTURE4);
+		glBindTexture(GL_TEXTURE_2D, _sand_tex);
 
 		Light::setup(_pid);
 
@@ -200,12 +208,6 @@ public:
 		GLint resolution_id = glGetUniformLocation(_pid, "resolution");
 		glUniform1i(resolution_id, resolution);
 
-        glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, heightmap);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_MIRRORED_REPEAT);
 		// Texture uniforms
 		GLuint tex_id = glGetUniformLocation(_pid, "tex");
         glUniform1i(tex_id, 0);

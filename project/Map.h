@@ -105,7 +105,7 @@ public:
 	}
 
 	void draw(const mat4 &model, const mat4 &view, const mat4 &projection) {
-
+		glEnable(GL_CULL_FACE);
         // Matrix to transform each tile
 		mat4 tr = mat4::Identity();
 		tr(2, 2) = -1; // flip on z axis

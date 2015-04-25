@@ -33,14 +33,14 @@ const float SLOPE_THRESHOLD = 0.25;
 
 void main() {
   // color scale at height depending on heightmap
-  vec3 sampled = texture(tex.r, uv);
+  vec3 sampled = texture(tex, uv).rgb;
   float height = sampled.r;
   float slope = abs(sampled.b - 0.5) + abs(sampled.g - 0.5);
 
   float grassAmount = 0, rockAmount = 0, sandAmount = 0, snowAmount = 0;
 
   // add some distortion to snow level for realism
-  float snow_spatial_dist = sin((uv.x*uv.y)*20*M_PI + slope);
+  float snow_spatial_dist = sin((uv.x+uv.y)*20*M_PI + slope);
   float snow_slope_dist = (slope * slope * 10);
   float snowActualHeight = SNOW_MIN_HEIGHT + SNOW_VARIANCE * snow_spatial_dist * snow_slope_dist;
 
@@ -78,6 +78,11 @@ void main() {
                          vec3(1.0,0.95,0.85), // yellowish
                          pow(sunAmount,8.0) );
   */
+
+  // Underwater effect (in testing)
+  float water_coeff = 0;
+  if(height < GRASS_MIN_HEIGHT) water_coeff = 1 - height*2;
+  finalColor = mix(finalColor, vec3(0, 0, 0.2), water_coeff);
 
   color = finalColor;
   //color = mix(finalColor, fogColor, fogAmount);
