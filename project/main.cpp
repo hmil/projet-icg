@@ -74,7 +74,6 @@ void display(){
 	fb_mirrored.bind();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		world.draw(model, mirrored_view, projection);
-		
 	fb_mirrored.unbind();
 
 	fb_main.bind();

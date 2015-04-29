@@ -5,7 +5,7 @@ uniform sampler2D tex_through;
 uniform sampler2D tex_mirror;
 uniform float time;
 
-float freqencies[4] = {130, 1103, 5503, 9907};
+float freqencies[4] = float[](130, 1103, 5503, 9907);
 
 vec2 distort(float freq) {
     return vec2(cos(time+uv.x*freq), sin(time+uv.y*freq))/1000;
