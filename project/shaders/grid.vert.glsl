@@ -7,11 +7,14 @@ uniform mat4 projection;
 uniform vec3 light_pos;
 
 in vec2 position;
+out float gl_ClipDistance[1];
 
 out vec2 uv;
 out vec3 normal;
 out vec3 light_dir;
 out vec3 view_dir;
+
+const float WATER_HEIGHT = 0.3f;
 
 // Used to scale the step according to heightmap normals amplification
 #define NORMAL_AMP  25.0
@@ -66,5 +69,5 @@ void main() {
   view_dir = normalize(camera_pos - world_point);
 
 
-
+  gl_ClipDistance[0] = vpoint.y - WATER_HEIGHT;
 }

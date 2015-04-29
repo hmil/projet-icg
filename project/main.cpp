@@ -78,16 +78,19 @@ void display(){
 	cam_pos(1) = -cam_pos(1); // reset cam pos
 	
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	
 	fb_mirrored.bind();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glEnable(GL_CLIP_DISTANCE0);
 		world.draw(model, mirrored_view, projection);
+		glDisable(GL_CLIP_DISTANCE0);
 	fb_mirrored.unbind();
 
 	fb_main.bind();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		world.draw(model, view, projection);
 	fb_main.unbind();
-
+	
 	world.draw(model, view, projection);
 
 	/*
