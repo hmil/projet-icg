@@ -46,7 +46,8 @@ public:
 	}
 
 	void update(const vec2 cam_pos) {
-		_cam_pos = cam_pos;
+		_cam_pos(0) = fmod(cam_pos(0), 4);
+		_cam_pos(1) = fmod(cam_pos(1), 4);
 		Vec2i newCell = cam_pos.cast<int>() / 4;
 		
         // Move the map by recycling tiles that are now too far away
@@ -114,8 +115,8 @@ public:
 		for (int i = 0; i < TILES_SPAN; ++i) {
 			for (int j = 0; j < TILES_SPAN; ++j) {
 
-				float pos_x = 4 * (active_cell(0) + i - TILES_SPAN / 2) + 2;
-				float pos_y = 4 * (active_cell(1) + j - TILES_SPAN / 2) + 2;
+				float pos_x = 4 * (/*active_cell(0)*/ + i - TILES_SPAN / 2) + 2;
+				float pos_y = 4 * (/*active_cell(1)*/ + j - TILES_SPAN / 2) + 2;
 
                 // translate to appropriate pos
 				tr(0, 3) = pos_x;

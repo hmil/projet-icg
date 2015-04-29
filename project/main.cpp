@@ -13,6 +13,7 @@ FrameBuffer fb_mirrored(width, height);
 ScreenQuad sqad;
 
 vec3 cam_pos(2103, 1, 2125);
+//vec3 cam_pos(0, 1, 0);
 vec3 cam_look;
 vec2 angles(0, 0); 
 vec2 old_angles;
@@ -51,7 +52,7 @@ void display(){
     
     ///--- Setup view-projection matrix
     float ratio = width / (float) height;
-    static mat4 projection = Eigen::perspective(45.0f, ratio, 0.02f, 10.0f);
+    static mat4 projection = Eigen::perspective(45.0f, ratio, 0.05f, 5.0f);
     vec3 cam_up(0.0f, 1.0f, 0.0f);
 
 	mat4 model = mat4::Identity();
@@ -60,10 +61,16 @@ void display(){
 	// TODO: move hardcoded water level smw else
 	model(1, 3) = -0.3f;
     
-	// mirror camera
+	// Floats get rough at high values so we keep the position near 0
+	vec2 cam_pos_memo(cam_pos(0), cam_pos(2));
+	cam_pos(0) = fmod(cam_pos(0), 4);
+	cam_pos(2) = fmod(cam_pos(2), 4);
+
+	// compute camera view from angles
 	cam_look(0) = cam_pos(0) - sin(angles(0))*cos(angles(1));
 	cam_look(2) = cam_pos(2) + cos(angles(0))*cos(angles(1));
 	cam_look(1) = cam_pos(1) - sin(angles(1));
+
 	mat4 view = Eigen::lookAt(cam_pos, cam_look, cam_up);
 	cam_pos(1) = -cam_pos(1);
 	cam_look(1) = -cam_look(1);
@@ -83,12 +90,17 @@ void display(){
 
 	world.draw(model, view, projection);
 
+	/*
 	mat4 waterModel = mat4::Identity();
 	waterModel(0, 3) = cam_pos(0);
 	waterModel(2, 3) = cam_pos(2);
 	waterModel(1, 3) = 0;
-	water.draw(projection*view*waterModel);
+	*/
+	water.draw(projection*view);
 
+	// restore camera
+	cam_pos(0) = cam_pos_memo(0);
+	cam_pos(2) = cam_pos_memo(1);
 
 	//sqad.draw();
 }
