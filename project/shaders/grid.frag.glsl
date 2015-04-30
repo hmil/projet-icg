@@ -24,6 +24,7 @@ float amplify(float d, float scale, float offset)
 
 void main()
 {
+
     vec3 N = normalize(gFacetNormal);
     vec3 L = vec3(10, 10, 10);
     float df = abs(dot(N, L));
