@@ -7,23 +7,23 @@ struct Light{
 	vec3 Id = vec3(0.85f, 0.9f, 1.0f);
 	vec3 Is = vec3(1.0f, 1.0f, 1.0f);
 
-	vec3 light_pos = vec3(2.0f, 2000.0f, 0.0);
+	vec3 light_dir = vec3(1.0f, 1.0f, 1.0f);
 
 	///--- Pass light properties to the shader
 	void setup(GLuint _pid){
 		glUseProgram(_pid);
-		GLuint light_pos_id = glGetUniformLocation(_pid, "light_pos"); //Given in camera space
+		GLuint light_dir_id = glGetUniformLocation(_pid, "light_dir"); //Given in camera space
 		GLuint Ia_id = glGetUniformLocation(_pid, "Ia");
 		GLuint Id_id = glGetUniformLocation(_pid, "Id");
 		GLuint Is_id = glGetUniformLocation(_pid, "Is");
-		glUniform3fv(light_pos_id, ONE, light_pos.data());
+		glUniform3fv(light_dir_id, ONE, light_dir.normalized().data());
 		glUniform3fv(Ia_id, ONE, Ia.data());
 		glUniform3fv(Id_id, ONE, Id.data());
 		glUniform3fv(Is_id, ONE, Is.data());
 	}
 
 	vec3 get_spot_direction(float time) {
-		return light_pos;
+		return light_dir;
 	}
 };
 
@@ -183,6 +183,7 @@ public:
     void draw(const mat4& model, const mat4& view, const mat4& projection, const int resolution, GLuint heightmap, Definition def){
         glUseProgram(_pid);
         glBindVertexArray(_vaos[def]);
+
         // Bind textures
         glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, heightmap);
@@ -204,6 +205,21 @@ public:
 		glUniformMatrix4fv(view_id, ONE, DONT_TRANSPOSE, view.data());
 		GLint projection_id = glGetUniformLocation(_pid, "projection");
 		glUniformMatrix4fv(projection_id, ONE, DONT_TRANSPOSE, projection.data());
+		GLint MV_id = glGetUniformLocation(_pid, "MV");
+		mat4 MV = view * model;
+		glUniformMatrix4fv(MV_id, ONE, DONT_TRANSPOSE, MV.data());
+		GLint MVP_id = glGetUniformLocation(_pid, "MVP");
+		glUniformMatrix4fv(MVP_id, ONE, DONT_TRANSPOSE, ((mat4)(projection * MV)).data());
+
+		// prebaked inverse
+		mat4 model_i = model.transpose();
+		model_i.inverse();
+		GLint model_i_id = glGetUniformLocation(_pid, "model_i");
+		glUniformMatrix4fv(model_i_id, ONE, DONT_TRANSPOSE, model_i.data());
+		mat4 view_i = view;
+		view_i.inverse();
+		GLint view_i_id = glGetUniformLocation(_pid, "view_i");
+		glUniformMatrix4fv(view_i_id, ONE, DONT_TRANSPOSE, view_i.data());
 
 		GLint resolution_id = glGetUniformLocation(_pid, "resolution");
 		glUniform1i(resolution_id, resolution);
@@ -216,6 +232,7 @@ public:
 		
 		int num_indices = 6 * grid_dim[def] * grid_dim[def];
 		glDrawElements(GL_TRIANGLES, num_indices, GL_UNSIGNED_INT, 0);
+
         glBindVertexArray(0);        
         glUseProgram(0);
     }

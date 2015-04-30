@@ -52,7 +52,7 @@ void display(){
     
     ///--- Setup view-projection matrix
     float ratio = width / (float) height;
-    static mat4 projection = Eigen::perspective(45.0f, ratio, 0.05f, 5.0f);
+    static mat4 projection = Eigen::perspective(45.0f, ratio, 0.01f, 10.0f);
     vec3 cam_up(0.0f, 1.0f, 0.0f);
 
 	mat4 model = mat4::Identity();

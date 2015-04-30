@@ -8,13 +8,13 @@ uniform sampler2D grass_tex;
 uniform sampler2D rock_tex;
 uniform sampler2D sand_tex;
 uniform sampler2D snow_tex;
+uniform vec3 light_dir;
 
 uniform vec3 fogColor;
 const float b = 2;
 
 in vec2 uv;
 in vec3 normal;
-in vec3 light_dir;
 in vec3 view_dir;
 in vec4 gl_FragCoord;
 

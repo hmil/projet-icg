@@ -4,14 +4,16 @@ uniform sampler2D tex;
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
-uniform vec3 light_pos;
+uniform mat4 MV;
+uniform mat4 MVP;
+uniform mat4 view_i; // prebaked inverse
+uniform mat4 model_i; // prebaked inverse
 
 in vec2 position;
 out float gl_ClipDistance[1];
 
 out vec2 uv;
 out vec3 normal;
-out vec3 light_dir;
 out vec3 view_dir;
 
 const float WATER_HEIGHT = 0.3f;
@@ -24,8 +26,6 @@ const float WATER_HEIGHT = 0.3f;
 uniform int resolution;
 
 void main() {
-  mat4 MV = view * model;
-  mat4 MVP = projection * MV;
 
 
   uv = (position + vec2(2.0, 2.0)) * 0.25;
@@ -42,7 +42,7 @@ void main() {
   // phong
 
   /// 1) compute normal_mv using the model_view matrix.
-  normal = normalize(vec3(mat3(inverse(transpose(model))) * vec3(vnormal)));
+  normal = normalize(vec3(mat3(model_i) * vec3(vnormal)));
 
   vec3 vpoint = vec3(position.x, height, -position.y);
 
@@ -61,11 +61,9 @@ void main() {
   gl_Position = MVP * vec4(vpoint, 1.0);
 
   vec3 world_point = vec3(model * vec4(vpoint, 1.0));
-  /// 2) compute the light direction light_dir.
-  light_dir = normalize(vec3(light_pos - world_point));
 
   /// 3) compute the view direction view_dir.
-  vec3 camera_pos = vec3(inverse(view) * vec4(0, 0, 0, 1));
+  vec3 camera_pos = vec3(view_i * vec4(0, 0, 0, 1));
   view_dir = normalize(camera_pos - world_point);
 
 
