@@ -69,13 +69,13 @@ public:
 	{
 		grid_dim[HIGH_DEF] = 512;
 		grid_dim[MEDIUM_DEF] = 256;
-		grid_dim[LOW_DEF] = 64;
+		grid_dim[LOW_DEF] = 32;
 	}
 
 	void init(vec3 fogColor){
 		
 		// Compile the shaders
-		_pid = opengp::load_shaders("shaders/grid.vert.glsl", "shaders/grid.frag.glsl");
+		_pid = opengp::load_shaders("shaders/grid.vert.glsl", "shaders/grid.frag.glsl", "shaders/grid.geom.glsl", "shaders/grid.tc.glsl", "shaders/grid.te.glsl");
         if(!_pid) exit(EXIT_FAILURE);       
         glUseProgram(_pid);
         
@@ -181,8 +181,18 @@ public:
     }
     
     void draw(const mat4& model, const mat4& view, const mat4& projection, const int resolution, GLuint heightmap, Definition def){
+		// TODO: work in progress: force definition to low
+		def = LOW_DEF;
+
         glUseProgram(_pid);
         glBindVertexArray(_vaos[def]);
+
+		// TODO: temporarily disabling clip plane
+		glDisable(GL_CLIP_DISTANCE0);
+		// Prepare tesselation: use triangle patches
+		// TODO: use squares
+		glPatchParameteri(GL_PATCH_VERTICES, 3);
+
 
         // Bind textures
         glActiveTexture(GL_TEXTURE0);
@@ -231,7 +241,7 @@ public:
         // Draw
 		
 		int num_indices = 6 * grid_dim[def] * grid_dim[def];
-		glDrawElements(GL_TRIANGLES, num_indices, GL_UNSIGNED_INT, 0);
+		glDrawElements(GL_PATCHES, num_indices, GL_UNSIGNED_INT, 0);
 
         glBindVertexArray(0);        
         glUseProgram(0);

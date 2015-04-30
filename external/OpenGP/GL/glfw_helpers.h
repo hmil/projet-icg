@@ -31,9 +31,9 @@ inline int glfwCreateWindow(const char* title = NULL){
         return EXIT_FAILURE;
     }    
     
-    /// Hint GLFW that we would like an OpenGL 3 context (at least)
-    glfwOpenWindowHint(GLFW_OPENGL_VERSION_MAJOR, 3);
-    glfwOpenWindowHint(GLFW_OPENGL_VERSION_MINOR, 2);
+    /// Hint GLFW that we would like an OpenGL 4 context (at least)
+    glfwOpenWindowHint(GLFW_OPENGL_VERSION_MAJOR, 4);
+    glfwOpenWindowHint(GLFW_OPENGL_VERSION_MINOR, 0);
     glfwOpenWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     
     /// Hint for multisampling

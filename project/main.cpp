@@ -65,8 +65,8 @@ void display(){
     
 	// Floats get rough at high values so we keep the position near 0
 	vec2 cam_pos_memo(cam_pos(0), cam_pos(2));
-	cam_pos(0) = fmod(cam_pos(0), 4);
-	cam_pos(2) = fmod(cam_pos(2), 4);
+	cam_pos(0) = 0;
+	cam_pos(2) = 0;
 
 	// compute camera view from angles
 	cam_look(0) = cam_pos(0) - sin(angles(0))*cos(angles(1));
@@ -99,12 +99,13 @@ void display(){
 	
 	world.draw(model, view, projection);
 
-	
+	/*
 	mat4 waterModel = mat4::Identity();
 	waterModel(0, 3) = cam_pos(0);
 	waterModel(2, 3) = cam_pos(2);
 	waterModel(1, 3) = 0;
-	water.draw(waterModel, view, projection);
+	*/
+	water.draw(mat4::Identity(), view, projection);
 
 	// restore camera
 	cam_pos(0) = cam_pos_memo(0);

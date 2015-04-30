@@ -106,7 +106,7 @@ public:
 	}
 
 	void draw(const mat4 &model, const mat4 &view, const mat4 &projection) {
-		glEnable(GL_CULL_FACE);
+		//glEnable(GL_CULL_FACE);
         // Matrix to transform each tile
 		mat4 tr = mat4::Identity();
 		tr(2, 2) = -1; // flip on z axis
@@ -115,24 +115,14 @@ public:
 		for (int i = 0; i < TILES_SPAN; ++i) {
 			for (int j = 0; j < TILES_SPAN; ++j) {
 
-				float pos_x = 4 * (/*active_cell(0)*/ + i - TILES_SPAN / 2) + 2;
-				float pos_y = 4 * (/*active_cell(1)*/ + j - TILES_SPAN / 2) + 2;
+				float pos_x = 4 * (/*active_cell(0)*/ +i - TILES_SPAN / 2) + 2 - _cam_pos(0);
+				float pos_y = 4 * (/*active_cell(1)*/ +j - TILES_SPAN / 2) + 2 - _cam_pos(1);
 
                 // translate to appropriate pos
 				tr(0, 3) = pos_x;
 				tr(2, 3) = pos_y;
 
-
-                // Compute LOD depending on distance
-				float dx = (_cam_pos(0) - pos_x);
-				float dy = (_cam_pos(1) - pos_y);
-				float dist = sqrt(dx*dx + dy*dy);
-				Grid::Definition def;
-				if (dist <= 6) def = Grid::HIGH_DEF;
-				else if (dist <= 12) def = Grid::MEDIUM_DEF;
-				else def = Grid::LOW_DEF;
-
-				active_tiles[i][j]->draw(model * tr, view, projection, TEXTURE_SIZE, def);
+				active_tiles[i][j]->draw(model * tr, view, projection, TEXTURE_SIZE, Grid::LOW_DEF);
 			}
 		}
 	}

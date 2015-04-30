@@ -170,10 +170,11 @@ inline GLuint compile_shaders(const char * vshader,
 
 
 /// Compiles the vertex, geometry and fragment shaders using file path
-inline GLuint load_shaders(const char * vertex_file_path, const char * fragment_file_path, const char * geometry_file_path = NULL) {
+inline GLuint load_shaders(const char * vertex_file_path, const char * fragment_file_path, const char * geometry_file_path = NULL
+	, const char * tc_file_path = NULL, const char * te_file_path = NULL) {
     const int SHADER_LOAD_FAILED = 0; 
 
-    std::string VertexShaderCode, FragmentShaderCode, GeometryShaderCode;
+    std::string VertexShaderCode, FragmentShaderCode, GeometryShaderCode, TCShaderCode, TEShaderCode;
     {
         /// Read the Vertex Shader code from the file
         std::ifstream VertexShaderStream(vertex_file_path, std::ios::in);
@@ -209,6 +210,34 @@ inline GLuint load_shaders(const char * vertex_file_path, const char * fragment_
                 return SHADER_LOAD_FAILED;
             }
         }
+
+		/// Read the Tesselation Control Shader code from the file
+		if (tc_file_path != NULL) {
+			std::ifstream TCShaderStream(tc_file_path, std::ios::in);
+			if (TCShaderStream.is_open()) {
+				TCShaderCode = std::string(std::istreambuf_iterator<char>(TCShaderStream),
+					std::istreambuf_iterator<char>());
+				TCShaderStream.close();
+			}
+			else {
+				printf("Could not open file: %s\n", tc_file_path);
+				return SHADER_LOAD_FAILED;
+			}
+		}
+
+		/// Read the Tesselation Evaluation Shader code from the file
+		if (te_file_path != NULL) {
+			std::ifstream TEShaderStream(te_file_path, std::ios::in);
+			if (TEShaderStream.is_open()) {
+				TEShaderCode = std::string(std::istreambuf_iterator<char>(TEShaderStream),
+					std::istreambuf_iterator<char>());
+				TEShaderStream.close();
+			}
+			else {
+				printf("Could not open file: %s\n", te_file_path);
+				return SHADER_LOAD_FAILED;
+			}
+		}
     }
 
     /// Compile them
@@ -216,10 +245,15 @@ inline GLuint load_shaders(const char * vertex_file_path, const char * fragment_
     char const * FragmentSourcePointer = FragmentShaderCode.c_str();
     char const * GeometrySourcePointer = NULL;
     if(geometry_file_path != NULL) GeometrySourcePointer = GeometryShaderCode.c_str();
+	char const * TCSourcePointer = NULL;
+	if (tc_file_path != NULL) TCSourcePointer = TCShaderCode.c_str();
+	char const * TESourcePointer = NULL;
+	if (te_file_path != NULL) TESourcePointer = TEShaderCode.c_str();
     
-    int status = compile_shaders(VertexSourcePointer, FragmentSourcePointer, GeometrySourcePointer);
+    int status = compile_shaders(VertexSourcePointer, FragmentSourcePointer, GeometrySourcePointer, TCSourcePointer, TESourcePointer);
     if(status == SHADER_LOAD_FAILED)
-        printf("Failed linking:\n  vshader: %s\n  fshader: %s\n  gshader: %s\n", vertex_file_path, fragment_file_path, geometry_file_path);
+        printf("Failed linking:\n  vshader: %s\n  fshader: %s\n  gshader: %s\n  tcshader: %s\n  teshader: %s\n", 
+			vertex_file_path, fragment_file_path, geometry_file_path, tc_file_path, te_file_path);
     return status;
 }
 
