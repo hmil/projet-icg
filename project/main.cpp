@@ -15,11 +15,12 @@ ScreenQuad sqad;
 vec3 cam_pos(2103, 1, 2125);
 //vec3 cam_pos(0, 1, 0);
 vec3 cam_look;
-vec2 angles(0, 0); 
+vec2 angles(0, 0);
 vec2 old_angles;
 vec2 old_mouse_pos;
 
 vec3 sky_color(0.85, 0.90, 0.95);
+//vec3 sky_color(1, 0, 0);
 
 #define MOVE_INC	0.015
 #define KEY_FWD		0
@@ -27,6 +28,7 @@ vec3 sky_color(0.85, 0.90, 0.95);
 #define KEY_LEFT	2
 #define KEY_RIGHT	3
 bool keys[] = { false, false, false, false };
+bool speedup = false;
 
 void init(){
 	glClearColor(sky_color(0), sky_color(1), sky_color(2), /*solid*/1.0);
@@ -46,13 +48,13 @@ void init(){
 
 void display(){
 
-    opengp::update_title_fps("FrameBuffer");   
+    opengp::update_title_fps("FrameBuffer");
     glViewport(0,0,width,height);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    
+
     ///--- Setup view-projection matrix
     float ratio = width / (float) height;
-    static mat4 projection = Eigen::perspective(45.0f, ratio, 0.05f, 5.0f);
+    static mat4 projection = Eigen::perspective(45.0f, ratio, 0.01f, 10.0f);
     vec3 cam_up(0.0f, 1.0f, 0.0f);
 
 	mat4 model = mat4::Identity();
@@ -72,11 +74,15 @@ void display(){
 	cam_look(1) = cam_pos(1) - sin(angles(1));
 
 	mat4 view = Eigen::lookAt(cam_pos, cam_look, cam_up);
+
+	// mirror camera
 	cam_pos(1) = -cam_pos(1);
 	cam_look(1) = -cam_look(1);
 	mat4 mirrored_view = Eigen::lookAt(cam_pos, cam_look, cam_up);
 	cam_pos(1) = -cam_pos(1); // reset cam pos
-	
+
+	// with clipping plane
+	float clippingPlane[] = {0, 0.3, 0, 0.5};
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
 	fb_mirrored.bind();
@@ -93,13 +99,12 @@ void display(){
 	
 	world.draw(model, view, projection);
 
-	/*
+	
 	mat4 waterModel = mat4::Identity();
 	waterModel(0, 3) = cam_pos(0);
 	waterModel(2, 3) = cam_pos(2);
 	waterModel(1, 3) = 0;
-	*/
-	water.draw(projection*view);
+	water.draw(waterModel, view, projection);
 
 	// restore camera
 	cam_pos(0) = cam_pos_memo(0);
@@ -109,25 +114,25 @@ void display(){
 }
 
 void update() {
-
+	const int coeff = speedup ? 3 : 1;
 	// update pos
 	if (keys[KEY_FWD]) {
-		cam_pos(2) += MOVE_INC*cos(angles(0))*cos(angles(1));
-		cam_pos(1) -= MOVE_INC*sin(angles(1));
-		cam_pos(0) -= MOVE_INC*sin(angles(0))*cos(angles(1));
+		cam_pos(2) +=  coeff * MOVE_INC*cos(angles(0))*cos(angles(1));
+		cam_pos(1) -= coeff * MOVE_INC*sin(angles(1));
+		cam_pos(0) -= coeff * MOVE_INC*sin(angles(0))*cos(angles(1));
 	}
 	else if (keys[KEY_BWD]) {
-		cam_pos(2) -= MOVE_INC*cos(angles(0))*cos(angles(1));
-		cam_pos(1) += MOVE_INC*sin(angles(1));
-		cam_pos(0) += MOVE_INC*sin(angles(0))*cos(angles(1));
+		cam_pos(2) -= coeff * MOVE_INC*cos(angles(0))*cos(angles(1));
+		cam_pos(1) += coeff * MOVE_INC*sin(angles(1));
+		cam_pos(0) += coeff * MOVE_INC*sin(angles(0))*cos(angles(1));
 	}
 	if (keys[KEY_LEFT]) {
-		cam_pos(2) += MOVE_INC*sin(angles(0));
-		cam_pos(0) += MOVE_INC*cos(angles(0));
+		cam_pos(2) += coeff * MOVE_INC*sin(angles(0));
+		cam_pos(0) += coeff * MOVE_INC*cos(angles(0));
 	}
 	else if (keys[KEY_RIGHT]) {
-		cam_pos(2) -= MOVE_INC*sin(angles(0));
-		cam_pos(0) -= MOVE_INC*cos(angles(0));
+		cam_pos(2) -= coeff * MOVE_INC*sin(angles(0));
+		cam_pos(0) -= coeff * MOVE_INC*cos(angles(0));
 	}
 	cam_look = cam_pos + vec3(0, 0, 1);
 
@@ -161,6 +166,7 @@ void mouse_pos(int x, int y) {
 
 void keyboard(int key, int action) {
 	if (action == GLFW_RELEASE) {
+
 		switch (key) {
 		case 'R': H += 0.05; break;
 		case 'F': H -= 0.05; break;
@@ -170,6 +176,9 @@ void keyboard(int key, int action) {
 		case 'H': octaves--; break;
 		case 'W':
 			keys[KEY_FWD] = false;
+			return;
+		case ' ':
+			speedup = false;
 			return;
 		case 'A':
 			keys[KEY_LEFT] = false;
@@ -187,18 +196,22 @@ void keyboard(int key, int action) {
 	}
 	else if (action == GLFW_PRESS) {
 		switch (key) {
-		case 'W': 
+		case 'W':
 			keys[KEY_FWD] = true;
 			return;
-		case 'A': 
+		case 'A':
 			keys[KEY_LEFT] = true;
 			return;
-		case 'S': 
+		case 'S':
 			keys[KEY_BWD] = true;
 			return;
-		case 'D': 
+		case 'D':
 			keys[KEY_RIGHT] = true;
 			return;
+		case ' ':
+			speedup = true;
+			return;
+
 		default: break;
 		}
 	}
