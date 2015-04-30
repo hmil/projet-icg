@@ -11,7 +11,6 @@ uniform sampler2D snow_tex;
 uniform vec3 light_dir;
 
 uniform vec3 fogColor;
-const float b = 2;
 
 in vec2 uv;
 in vec3 normal;

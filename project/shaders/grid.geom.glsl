@@ -6,17 +6,15 @@ uniform mat4 model_i;
 layout(triangles) in;
 layout(triangle_strip, max_vertices = 3) out;
 in vec3 tePosition[3];
-in vec3 tePatchDistance[3];
 in vec2 teUV[3];
-out gl_PerVertex {
-    vec4 gl_Position;
-    float gl_PointSize;
-    float gl_ClipDistance[1];
-};
+in vec3 teNormal[3];
+in vec3 tePatchDistance[3];
+
 out vec3 gFacetNormal;
 out vec3 gPatchDistance;
 out vec3 gTriDistance;
 out vec2 gUV;
+out vec3 gNormal;
 
 
 
@@ -33,20 +31,26 @@ void main()
     gPatchDistance = tePatchDistance[0];
     gTriDistance = vec3(1, 0, 0);
     gUV = teUV[0];
-    gl_ClipDistance[0] = -1;
-    gl_Position = gl_in[0].gl_Position; EmitVertex();
+    gNormal = teNormal[0];
+    gl_ClipDistance[0] = gl_in[0].gl_ClipDistance[0];
+    gl_Position = gl_in[0].gl_Position;
+    EmitVertex();
 
     gPatchDistance = tePatchDistance[1];
     gTriDistance = vec3(0, 1, 0);
     gUV = teUV[1];
-    gl_ClipDistance[0] = -1;
-    gl_Position = gl_in[1].gl_Position; EmitVertex();
+    gNormal = teNormal[1];
+    gl_ClipDistance[0] = gl_in[1].gl_ClipDistance[0];
+    gl_Position = gl_in[1].gl_Position;
+    EmitVertex();
 
     gPatchDistance = tePatchDistance[2];
     gTriDistance = vec3(0, 0, 1);
     gUV = teUV[2];
-    gl_ClipDistance[0] = -1;
-    gl_Position = gl_in[2].gl_Position; EmitVertex();
+    gNormal = teNormal[2];
+    gl_ClipDistance[0] = gl_in[2].gl_ClipDistance[0];
+    gl_Position = gl_in[2].gl_Position;
+    EmitVertex();
 
     EndPrimitive();
 }

@@ -20,7 +20,7 @@ vec2 old_angles;
 vec2 old_mouse_pos;
 
 vec3 sky_color(0.85, 0.90, 0.95);
-//vec3 sky_color(1, 0, 0);
+// vec3 sky_color(1, 0, 0);
 
 #define MOVE_INC	0.015
 #define KEY_FWD		0

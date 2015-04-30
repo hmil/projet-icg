@@ -4,18 +4,11 @@
 layout(vertices = 3) out;
 in vec2 vPosition[];
 in vec2 vUV[];
-out gl_PerVertex {
-    vec4 gl_Position;
-    float gl_PointSize;
-    float gl_ClipDistance[1];
-} vert[];
+in int vLOD[];
 out vec2 tcPosition[];
 out vec2 tcUV[];
 const float TessLevelInner = 1;
 const float TessLevelOuter = 1;
-
-uniform mat4 MVP;
-uniform mat4 model;
 
 #define ID gl_InvocationID
 
@@ -25,17 +18,15 @@ void main()
     vec2 myPoint = vPosition[ID];
     tcPosition[ID] = myPoint;
 
-    vert[ID].gl_ClipDistance[0] = -1;
-
-    vec4 pp = model * vec4(myPoint.x, 0, -myPoint.y, 1.0 );
-    pp /= pp.w;
-
-    int tess = int((1 - clamp(length(vec2(pp.x, pp.z)) / 5 - 0.5, 0, 1)) * 6);
+    int tess = vLOD[ID];
 
     if (ID == 0) {
-        gl_TessLevelInner[0] = tess;
-        gl_TessLevelOuter[0] = 3;
-        gl_TessLevelOuter[1] = 3;
-        gl_TessLevelOuter[2] = 3;
+        gl_TessLevelInner[0] = min(min(vLOD[0], vLOD[1]), vLOD[2]);
+        // Use minimum of the two vertices LOD for edge tess value
+        // Such that adjacent patches have the same LOD on a shared edge
+        // This way tess doesn't create gaps in the map
+        gl_TessLevelOuter[0] = min(vLOD[1], vLOD[2]);
+        gl_TessLevelOuter[1] = min(vLOD[0], vLOD[2]);
+        gl_TessLevelOuter[2] = min(vLOD[0], vLOD[1]);
     }
 }

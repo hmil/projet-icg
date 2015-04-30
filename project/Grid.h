@@ -187,10 +187,7 @@ public:
         glUseProgram(_pid);
         glBindVertexArray(_vaos[def]);
 
-		// TODO: temporarily disabling clip plane
-		glDisable(GL_CLIP_DISTANCE0);
 		// Prepare tesselation: use triangle patches
-		// TODO: use squares
 		glPatchParameteri(GL_PATCH_VERTICES, 3);
 
 

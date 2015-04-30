@@ -31,7 +31,7 @@ inline int glfwCreateWindow(const char* title = NULL){
         return EXIT_FAILURE;
     }    
     
-    /// Hint GLFW that we would like an OpenGL 4 context (at least)
+    /// Hint GLFW that we would like an OpenGL 4.0 context (at least)
     glfwOpenWindowHint(GLFW_OPENGL_VERSION_MAJOR, 4);
     glfwOpenWindowHint(GLFW_OPENGL_VERSION_MINOR, 0);
     glfwOpenWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
@@ -42,7 +42,7 @@ inline int glfwCreateWindow(const char* title = NULL){
     /// Attempt to open the window: fails if required version unavailable
     /// @note Intel GPUs do not support OpenGL 3.0
     if( !glfwOpenWindow(_width, _height, 0,0,0,0, 32,0, GLFW_WINDOW ) ){
-        fprintf( stderr, "Failed to open OpenGL 3 GLFW window.\n" );
+        fprintf( stderr, "Failed to open OpenGL 4 GLFW window.\n" );
         glfwTerminate();
         return EXIT_FAILURE;
     }
