@@ -29,14 +29,14 @@ struct Light{
 
 class Grid : public Light{
 protected:
-    GLuint _vaos[3];          ///< vertex array object
-    GLuint _vbo_positions[3]; ///< memory buffer for positions
-    GLuint _vbo_indexes[3];    ///< memory buffer for indice
+    GLuint _vao;          ///< vertex array object
+    GLuint _vbo_position; ///< memory buffer for positions
+    GLuint _vbo_index;    ///< memory buffer for indice
 
     GLuint _pid;          ///< GLSL shader program ID
     GLuint _grass_tex, _rock_tex, _snow_tex, _sand_tex;
     
-	int grid_dim[3];
+	int grid_dim;
 
 
 	void generateGrid(std::vector<GLfloat> &vertices, std::vector<GLuint> &indices, int dim) {
@@ -63,14 +63,8 @@ protected:
 
 public:
 
-	enum Definition { HIGH_DEF, MEDIUM_DEF, LOW_DEF };
-
-	Grid()
-	{
-		grid_dim[HIGH_DEF] = 512;
-		grid_dim[MEDIUM_DEF] = 256;
-		grid_dim[LOW_DEF] = 32;
-	}
+	Grid() : grid_dim(32)
+	{ }
 
 	void init(vec3 fogColor){
 		
@@ -84,21 +78,21 @@ public:
         GLuint loc_position = glGetAttribLocation(_pid, "position");
 
 			
-		for (int i = 0; i < 3; ++i) {
+		{
 			std::vector<GLfloat> vertices;
 			std::vector<GLuint> indices;
 
 			// Vertex one vertex Array
-			glGenVertexArrays(1, &_vaos[i]);
-			glBindVertexArray(_vaos[i]);
-			generateGrid(vertices, indices, grid_dim[i]);
+			glGenVertexArrays(1, &_vao);
+			glBindVertexArray(_vao);
+			generateGrid(vertices, indices, grid_dim);
 			// position buffer
-			glGenBuffers(1, &_vbo_positions[i]);
-			glBindBuffer(GL_ARRAY_BUFFER, _vbo_positions[i]);
+			glGenBuffers(1, &_vbo_position);
+			glBindBuffer(GL_ARRAY_BUFFER, _vbo_position);
 			glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(GLfloat), &vertices[0], GL_STATIC_DRAW);
 			// vertex indices
-			glGenBuffers(1, &_vbo_indexes[i]);
-			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _vbo_indexes[i]);
+			glGenBuffers(1, &_vbo_index);
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _vbo_index);
 			glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint), &indices[0], GL_STATIC_DRAW);
 			// position shader attribute
 			glEnableVertexAttribArray(loc_position);
@@ -168,11 +162,9 @@ public:
     }
            
     void cleanup(){
-		for (int i = 0; i < 3; ++i) {
-			glDeleteBuffers(1, &_vbo_positions[i]);
-			glDeleteBuffers(1, &_vbo_indexes[i]);
-			glDeleteVertexArrays(1, &_vaos[i]);
-		}
+		glDeleteBuffers(1, &_vbo_position);
+		glDeleteBuffers(1, &_vbo_index);
+		glDeleteVertexArrays(1, &_vao);
         glDeleteProgram(_pid);
         glDeleteTextures(1, &_grass_tex);
         glDeleteTextures(1, &_snow_tex);
@@ -180,12 +172,10 @@ public:
         glDeleteTextures(1, &_rock_tex);
     }
     
-    void draw(const mat4& model, const mat4& view, const mat4& projection, const int resolution, GLuint heightmap, Definition def){
-		// TODO: work in progress: force definition to low
-		def = LOW_DEF;
+    void draw(const mat4& model, const mat4& view, const mat4& projection, const int resolution, GLuint heightmap){
 
         glUseProgram(_pid);
-        glBindVertexArray(_vaos[def]);
+        glBindVertexArray(_vao);
 
 		// Prepare tesselation: use triangle patches
 		glPatchParameteri(GL_PATCH_VERTICES, 3);
@@ -237,7 +227,7 @@ public:
 
         // Draw
 		
-		int num_indices = 6 * grid_dim[def] * grid_dim[def];
+		int num_indices = 6 * grid_dim * grid_dim;
 		glDrawElements(GL_PATCHES, num_indices, GL_UNSIGNED_INT, 0);
 
         glBindVertexArray(0);        

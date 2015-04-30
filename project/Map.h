@@ -122,7 +122,7 @@ public:
 				tr(0, 3) = pos_x;
 				tr(2, 3) = pos_y;
 
-				active_tiles[i][j]->draw(model * tr, view, projection, TEXTURE_SIZE, Grid::LOW_DEF);
+				active_tiles[i][j]->draw(model * tr, view, projection, TEXTURE_SIZE);
 			}
 		}
 	}
