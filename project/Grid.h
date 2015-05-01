@@ -52,8 +52,6 @@ protected:
 		for (int i = 0; i < dim; ++i) {
 			for (int j = 0; j < dim; ++j) {
 				indices.push_back((dim + 1) * i + j);
-				indices.push_back((dim + 1) * i + j + 1);
-				indices.push_back((dim + 1) * (i + 1) + j);
 				indices.push_back((dim + 1) * (i + 1) + j);
 				indices.push_back((dim + 1) * i + j + 1);
 				indices.push_back((dim + 1) * (i + 1) + j + 1);
@@ -177,8 +175,8 @@ public:
         glUseProgram(_pid);
         glBindVertexArray(_vao);
 
-		// Prepare tesselation: use triangle patches
-		glPatchParameteri(GL_PATCH_VERTICES, 3);
+		// Prepare tesselation: use quad patches
+		glPatchParameteri(GL_PATCH_VERTICES, 4);
 
 
         // Bind textures
@@ -227,7 +225,7 @@ public:
 
         // Draw
 		
-		int num_indices = 6 * grid_dim * grid_dim;
+		int num_indices = 4 * grid_dim * grid_dim;
 		glDrawElements(GL_PATCHES, num_indices, GL_UNSIGNED_INT, 0);
 
         glBindVertexArray(0);        

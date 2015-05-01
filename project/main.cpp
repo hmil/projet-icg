@@ -20,7 +20,7 @@ vec2 old_angles;
 vec2 old_mouse_pos;
 
 vec3 sky_color(0.85, 0.90, 0.95);
-// vec3 sky_color(1, 0, 0);
+//vec3 sky_color(1, 0, 0);
 
 #define MOVE_INC	0.015
 #define KEY_FWD		0
@@ -87,7 +87,8 @@ void display(){
 	
 	fb_mirrored.bind();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		glEnable(GL_CLIP_DISTANCE0);
+		if (cam_pos(1) > 0)
+			glEnable(GL_CLIP_DISTANCE0);
 		world.draw(model, mirrored_view, projection);
 		glDisable(GL_CLIP_DISTANCE0);
 	fb_mirrored.unbind();

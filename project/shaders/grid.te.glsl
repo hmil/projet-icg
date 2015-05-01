@@ -1,7 +1,7 @@
 #version 400 core
 // TessEval
 
-layout(triangles, equal_spacing, cw) in;
+layout(quads, equal_spacing, cw) in;
 in vec2 tcPosition[];
 in vec2 tcUV[];
 out vec3 tePosition;
@@ -22,14 +22,12 @@ const float WATER_HEIGHT = 0.3f;
 
 void main()
 {
-  vec2 u1 = gl_TessCoord.x * tcUV[0];
-  vec2 u2 = gl_TessCoord.y * tcUV[1];
-  vec2 u3 = gl_TessCoord.z * tcUV[2];
-  teUV = u1 + u2 + u3;
-  vec2 p0 = gl_TessCoord.x * tcPosition[0];
-  vec2 p1 = gl_TessCoord.y * tcPosition[1];
-  vec2 p2 = gl_TessCoord.z * tcPosition[2];
-  vec2 point = p0 + p1 + p2;
+  vec2 u1 = mix(tcUV[0], tcUV[1], gl_TessCoord.x);
+  vec2 u2 = mix(tcUV[2], tcUV[3], gl_TessCoord.x);
+  teUV = mix(u1, u2, gl_TessCoord.y);
+  vec2 p0 = mix(tcPosition[0], tcPosition[1], gl_TessCoord.x);
+  vec2 p1 = mix(tcPosition[2], tcPosition[3], gl_TessCoord.x);
+  vec2 point = mix(p0, p1, gl_TessCoord.y);
 
   // Unpacking heightmap data
   vec3 sampled = texture(tex, teUV).rgb;

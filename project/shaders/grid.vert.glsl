@@ -20,9 +20,9 @@ void main()
   float dist = length(vec2(pp.x, pp.z));
 
   vLOD = 1;
-  if (dist < 5) vLOD = 4;
-  if (dist < 2) vLOD = 6;
-  if (dist < 1.5) vLOD = 8;
+  if (dist < 3) vLOD = 6;
+  else if (dist < 4) vLOD = 5;
+  else if (dist < 7) vLOD = 2;
 
   //vLOD = int((1 - clamp(length(vec2(pp.x, pp.z)) / 2.5 - 0.4, 0, 1)) * 10 + 1);
 }
