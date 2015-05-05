@@ -17,6 +17,7 @@ uniform sampler2D rock_tex;
 uniform sampler2D sand_tex;
 uniform sampler2D snow_tex;
 uniform vec3 light_dir;
+uniform float cam_height;
 
 
 const float SNOW_INTERP_FACTOR = 100;
@@ -29,6 +30,17 @@ const float SNOW_MIN_HEIGHT = 0.65;
 const float SNOW_VARIANCE = 0.09;
 
 const float SLOPE_THRESHOLD = 0.25;
+
+const float zNear = 0.01;
+const float zFar = 10.0;
+float getDepth() {
+  float z_b = gl_FragCoord.z;
+  float z_n = 2.0 * z_b - 1.0;
+  return clamp(2.0 * zNear * zFar / (zFar + zNear - z_n * (zFar - zNear)), 0, 1);
+}
+vec3 disperseUnderwater(vec3 colorIn, float amount) {
+  return mix(colorIn, vec3(0, 0, 0.2), amount);
+}
 
 vec4 classicShading() {
   // Sample height data once
@@ -69,8 +81,16 @@ vec4 classicShading() {
 
   // Underwater effect
   float water_coeff = 0;
-  if(height < GRASS_MIN_HEIGHT) water_coeff = 1 - height*2;
-  finalColor = mix(finalColor, vec3(0, 0, 0.2), water_coeff);
+  if(height < GRASS_MIN_HEIGHT) {
+    water_coeff = sqrt(GRASS_MIN_HEIGHT - height);
+    finalColor = mix(finalColor, vec3(0, 0, 0.2), water_coeff);
+  }
+
+  float disperse_distance = GRASS_MIN_HEIGHT - height;
+  if (cam_height < 0) {
+    disperse_distance = getDepth();
+  }
+  finalColor = disperseUnderwater(finalColor, disperse_distance);
 
   return vec4(finalColor, 1);
 }
@@ -100,5 +120,5 @@ vec4 tessellationDebugShading() {
 void main()
 {
   FragColor = classicShading();
-  // FragColor = tessellationDebugShading();
+  //FragColor = tessellationDebugShading();
 }

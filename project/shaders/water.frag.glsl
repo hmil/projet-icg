@@ -6,6 +6,18 @@ uniform sampler2D tex_through;
 uniform sampler2D tex_mirror;
 uniform float time;
 
+const float zNear = 0.01;
+const float zFar = 10.0;
+float getDepth() {
+  float z_b = gl_FragCoord.z;
+  float z_n = 2.0 * z_b - 1.0;
+  return clamp(2.0 * zNear * zFar / (zFar + zNear - z_n * (zFar - zNear)), 0, 1);
+}
+vec3 disperseUnderwater(vec3 colorIn, float amount) {
+  return mix(colorIn, vec3(0, 0, 0.2), amount);
+}
+
+
 float freqencies[4] = float[](130, 1103, 5503, 9907);
 
 vec2 distort(float freq) {
@@ -37,4 +49,9 @@ void main() {
 
 	float mix_coeff = clamp(1 - view_dir_coeff, 0, 1);
 	color = mix( texture(tex_through, vec2(u,v) + distortion).rgb, texture(tex_mirror, vec2(u,1-v) + distortion).rgb, mix_coeff);
+
+    // underwater loss of light
+    if (view_dir.y < 0) {
+        color = disperseUnderwater(color, getDepth());
+    }
 }

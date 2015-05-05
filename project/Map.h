@@ -105,7 +105,7 @@ public:
 		active_cell = newCell;
 	}
 
-	void draw(const mat4 &model, const mat4 &view, const mat4 &projection) {
+	void draw(const mat4 &model, const mat4 &view, const mat4 &projection, const float cam_height) {
 		//glEnable(GL_CULL_FACE);
         // Matrix to transform each tile
 		mat4 tr = mat4::Identity();
@@ -122,7 +122,7 @@ public:
 				tr(0, 3) = pos_x;
 				tr(2, 3) = pos_y;
 
-				active_tiles[i][j]->draw(model * tr, view, projection, TEXTURE_SIZE);
+				active_tiles[i][j]->draw(model * tr, view, projection, TEXTURE_SIZE, cam_height);
 			}
 		}
 	}

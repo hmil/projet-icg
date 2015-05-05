@@ -170,7 +170,7 @@ public:
         glDeleteTextures(1, &_rock_tex);
     }
     
-    void draw(const mat4& model, const mat4& view, const mat4& projection, const int resolution, GLuint heightmap){
+	void draw(const mat4& model, const mat4& view, const mat4& projection, const int resolution, GLuint heightmap, const float cam_height){
 
         glUseProgram(_pid);
         glBindVertexArray(_vao);
@@ -192,6 +192,9 @@ public:
 		glBindTexture(GL_TEXTURE_2D, _sand_tex);
 
 		Light::setup(_pid);
+
+		
+		glUniform1f(glGetUniformLocation(_pid, "cam_height"), cam_height);
 
 		///--- Setup matrix stack
 		GLint model_id = glGetUniformLocation(_pid, "model");

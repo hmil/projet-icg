@@ -10,6 +10,7 @@ Map world;
 Water water;
 FrameBuffer fb_main(width, height);
 FrameBuffer fb_mirrored(width, height);
+FrameBuffer fb_quad(width, height);
 ScreenQuad sqad;
 
 vec3 cam_pos(2103, 1, 2125);
@@ -37,9 +38,10 @@ void init(){
 	world.init(vec2(cam_pos(0), cam_pos(2)), sky_color);
 	GLuint fb_main_tex = fb_main.init(true);
 	GLuint fb_mirr_tex = fb_mirrored.init(true);
+	GLuint fb_quad_tex = fb_quad.init(true);
 	water.init(fb_main_tex, fb_mirr_tex);
 
-	sqad.init(fb_main_tex);
+	sqad.init(fb_quad_tex);
 
 
 
@@ -80,39 +82,30 @@ void display(){
 	cam_look(1) = -cam_look(1);
 	mat4 mirrored_view = Eigen::lookAt(cam_pos, cam_look, cam_up);
 	cam_pos(1) = -cam_pos(1); // reset cam pos
-
-	// with clipping plane
-	float clippingPlane[] = {0, 0.3, 0, 0.5};
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
 	fb_mirrored.bind();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		if (cam_pos(1) > 0)
 			glEnable(GL_CLIP_DISTANCE0);
-		world.draw(model, mirrored_view, projection);
+		world.draw(model, mirrored_view, projection, cam_pos(1));
 		glDisable(GL_CLIP_DISTANCE0);
 	fb_mirrored.unbind();
 
 	fb_main.bind();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		world.draw(model, view, projection);
+		world.draw(model, view, projection, cam_pos(1));
 	fb_main.unbind();
 	
-	world.draw(model, view, projection);
-
-	/*
-	mat4 waterModel = mat4::Identity();
-	waterModel(0, 3) = cam_pos(0);
-	waterModel(2, 3) = cam_pos(2);
-	waterModel(1, 3) = 0;
-	*/
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	world.draw(model, view, projection, cam_pos(1));
 	water.draw(mat4::Identity(), view, projection);
+	
+	
+	//sqad.draw();
 
 	// restore camera
 	cam_pos(0) = cam_pos_memo(0);
 	cam_pos(2) = cam_pos_memo(1);
-
-	//sqad.draw();
 }
 
 void update() {

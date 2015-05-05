@@ -43,8 +43,8 @@ public:
 		_fb.unbind();
 	}
 
-	void draw(const mat4& model, const mat4& view, const mat4& projection, const int resolution){
-		_grid->draw(model, view, projection, resolution, fb_tex);
+	void draw(const mat4& model, const mat4& view, const mat4& projection, const int resolution, const float cam_height){
+		_grid->draw(model, view, projection, resolution, fb_tex, cam_height);
 	}
 
 
