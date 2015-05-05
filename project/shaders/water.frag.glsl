@@ -2,9 +2,14 @@
 out vec3 color;
 in vec2 uv;
 in vec4 view_dir;
+in vec2 world_pos;
 uniform sampler2D tex_through;
 uniform sampler2D tex_mirror;
 uniform float time;
+
+uniform vec2 cam_pos;
+
+const float M_PI = 3.1415;
 
 const float zNear = 0.01;
 const float zFar = 10.0;
@@ -18,10 +23,11 @@ vec3 disperseUnderwater(vec3 colorIn, float amount) {
 }
 
 
-float freqencies[4] = float[](130, 1103, 5503, 9907);
-
+#define harmonics 6
+float freqencies[harmonics] = float[](130, 10, 113, 550, 907, 63);
 vec2 distort(float freq) {
-    return vec2(cos(time+uv.x*freq), sin(time+uv.y*freq))/1000;
+    vec2 value = -time*sqrt(freq)/10 + (world_pos + cam_pos) * freq;
+    return vec2(cos(value.x * M_PI), sin(value.y * M_PI))/1000;
 }
 
 void main() {
@@ -30,7 +36,7 @@ void main() {
 
     // This is just a test for what could be the wave generator
     vec2 distortion = vec2(0, 0);
-    for (int i = 0 ; i < 4 ; ++i) {
+    for (int i = 0 ; i < harmonics ; ++i) {
         distortion += distort(freqencies[i]);
     }
 
@@ -54,4 +60,6 @@ void main() {
     if (view_dir.y < 0) {
         color = disperseUnderwater(color, getDepth());
     }
+
+    //color = vec3(distortion.x * 100, distortion.y * 100, 0);
 }

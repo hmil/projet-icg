@@ -132,6 +132,7 @@ void update() {
 	cam_look = cam_pos + vec3(0, 0, 1);
 
 	world.update(vec2(cam_pos(0), cam_pos(2)));
+	water.update(vec2(cam_pos(0), cam_pos(2)));
 
 	display();
 }

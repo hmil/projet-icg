@@ -11,6 +11,8 @@ protected:
 
 	const float PLANE_SIZE = 10;
 
+	vec2 _cam_pos;
+
 public:
     void init(GLuint tex_through, GLuint tex_mirror){
         ///--- Compile the shaders
@@ -43,8 +45,8 @@ public:
         ///--- Texture coordinates
         {
             const GLfloat vtexcoord[] = { /*V1*/ 0.0f, 0.0f,
-                                          /*V2*/ 1.0f, 0.0f,
-                                          /*V3*/ 0.0f, 1.0f,
+                                          /*V2*/ 0.0f, 1.0f,
+                                          /*V3*/ 1.0f, 0.0f,
                                           /*V4*/ 1.0f, 1.0f};
 
             ///--- Buffer
@@ -72,6 +74,10 @@ public:
         glUseProgram(0);
     }
 
+	void update(const vec2& cam_pos) {
+		_cam_pos = cam_pos;
+	}
+
     void draw(const mat4& M, const mat4& V, const mat4& P){
         const mat4 MVP = P * V * M;
         glUseProgram(_pid);
@@ -86,6 +92,8 @@ public:
             glBindTexture(GL_TEXTURE_2D, _tex_through);
             glActiveTexture(GL_TEXTURE1);
             glBindTexture(GL_TEXTURE_2D, _tex_mirror);
+
+			glUniform2f(glGetUniformLocation(_pid, "cam_pos"), _cam_pos(0), _cam_pos(1));
 
             ///--- Setup MVP
             GLuint MVP_id = glGetUniformLocation(_pid, "MVP");

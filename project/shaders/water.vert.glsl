@@ -6,6 +6,7 @@ in vec3 vpoint;
 in vec2 vtexcoord;
 out vec2 uv;
 out vec4 view_dir;
+out vec2 world_pos;
 
 void main() {
     vec4 pos = MVP * vec4(vpoint, 1.0);
@@ -13,6 +14,8 @@ void main() {
 
     gl_Position = pos;
     view_dir = normalize(inverse(V) * vec4(0, 0, 0, 1) - M * vec4(vpoint, 1.0));
+
+    world_pos = vec2(vpoint.x, vpoint.z);
 }
 
 
