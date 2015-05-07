@@ -20,7 +20,7 @@ vec2 angles(0, 0);
 vec2 old_angles;
 vec2 old_mouse_pos;
 
-vec3 sky_color(0.85, 0.90, 0.95);
+vec3 sky_color(0.60, 0.70, 0.85);
 //vec3 sky_color(1, 0, 0);
 
 #define MOVE_INC	0.015
@@ -36,12 +36,13 @@ void init(){
     glEnable(GL_DEPTH_TEST);
 
 	world.init(vec2(cam_pos(0), cam_pos(2)), sky_color);
-	GLuint fb_main_tex = fb_main.init(true);
-	GLuint fb_mirr_tex = fb_mirrored.init(true);
-	GLuint fb_quad_tex = fb_quad.init(true);
-	water.init(fb_main_tex, fb_mirr_tex);
+	fb_main.init(true);
+	fb_mirrored.init(true);
+	fb_quad.init(true);
 
-	sqad.init(fb_quad_tex);
+	water.init(fb_main.getColorAttachment(), fb_mirrored.getColorAttachment());
+
+	sqad.init(fb_quad.getColorAttachment(), fb_quad.getDepthAttachment());
 
 
 
@@ -91,21 +92,25 @@ void display(){
 		glDisable(GL_CLIP_DISTANCE0);
 	fb_mirrored.unbind();
 
+	
 	fb_main.bind();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		world.draw(model, view, projection, cam_pos(1));
 	fb_main.unbind();
 	
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	world.draw(model, view, projection, cam_pos(1));
-	water.draw(mat4::Identity(), view, projection);
+	fb_quad.bind();
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		world.draw(model, view, projection, cam_pos(1));
+		water.draw(mat4::Identity(), view, projection);
+	fb_quad.unbind();
 	
-	
-	//sqad.draw();
-
 	// restore camera
 	cam_pos(0) = cam_pos_memo(0);
 	cam_pos(2) = cam_pos_memo(1);
+
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	sqad.draw(view, projection, cam_pos);
+
 }
 
 void update() {

@@ -26,7 +26,8 @@ public:
 	{
 		_gen = gen;
 		_grid = grid;
-		fb_tex = _fb.init(true /* use interpolation */);
+		_fb.init(true /* use interpolation */);
+		fb_tex = _fb.getColorAttachment();
 		_offset(0) = x;
 		_offset(1) = y;
 	}
