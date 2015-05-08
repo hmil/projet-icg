@@ -84,12 +84,16 @@ void display(){
 	mat4 mirrored_view = Eigen::lookAt(cam_pos, cam_look, cam_up);
 	cam_pos(1) = -cam_pos(1); // reset cam pos
 	
-	fb_mirrored.bind();
+	fb_quad.bind();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		if (cam_pos(1) > 0)
 			glEnable(GL_CLIP_DISTANCE0);
 		world.draw(model, mirrored_view, projection, cam_pos(1));
 		glDisable(GL_CLIP_DISTANCE0);
+	fb_quad.unbind();
+	fb_mirrored.bind();
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		sqad.draw(mirrored_view, projection, cam_pos);
 	fb_mirrored.unbind();
 
 	
