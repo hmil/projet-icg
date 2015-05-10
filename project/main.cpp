@@ -93,7 +93,8 @@ void display(){
 	fb_quad.unbind();
 	fb_mirrored.bind();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		sqad.draw(mirrored_view, projection, cam_pos);
+		vec3 sfx_mirror_cam_pos(cam_pos_memo(0), -cam_pos(1), cam_pos_memo(1));
+		sqad.draw(mirrored_view, projection, sfx_mirror_cam_pos);
 	fb_mirrored.unbind();
 
 	

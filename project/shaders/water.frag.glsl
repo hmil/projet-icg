@@ -9,7 +9,7 @@ uniform float time;
 
 uniform vec2 cam_pos;
 
-const float M_PI = 3.1415;
+const float M_PI = 3.14159265358979323846;
 
 const float zNear = 0.01;
 const float zFar = 10.0;

@@ -1,5 +1,7 @@
 #pragma once
 #include "icg_common.h"
+#include "HeightmapGenerator.h"
+#include "FrameBuffer.h"
 
 class ScreenQuad{
 protected:
@@ -8,7 +10,19 @@ protected:
     GLuint _vbo; ///< memory buffer
     GLuint _color_tex; ///< Texture ID
 	GLuint _depth_tex; ///< Texture ID
+	GLuint _clouds_tex;
+
+	// We are on the cheap. We'll just recycle our good old map generator to make clouds
+	HeightmapGenerator cloudsGenerator;
+	FrameBuffer cloudsFB;
+	// clouds params
+	float H = 1.15f;
+	float lacunarity = 3.0997;
+	int octaves = 4;
+
 public:
+	ScreenQuad() : cloudsFB(2048, 2048) {}
+
     void init(GLuint color_tex, GLuint depth_tex){ 
         
         ///--- Compile the shaders
@@ -66,13 +80,34 @@ public:
 		glUniform1i(depth_tex_id, 1 /*GL_TEXTURE1*/);
     
         
-        ///--- to avoid the current object being polluted
-        glBindVertexArray(0);
-        glUseProgram(0);
+		// Clouds stuff
+		cloudsFB.init(false);
+
+		_clouds_tex = cloudsFB.getColorAttachment();
+		glBindTexture(GL_TEXTURE_2D, _clouds_tex);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+		GLuint clouds_tex_id = glGetUniformLocation(_pid, "clouds_tex");
+		glUniform1i(clouds_tex_id, 2 /*GL_TEXTURE2*/);
+
+		cloudsGenerator.init(1024); // initialize a new heightmap generator
+		cloudsFB.bind();
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+			cloudsGenerator.drawHeights(H, lacunarity, octaves, vec2(10, 13));
+		cloudsFB.unbind();
+
+
+
+
+		///--- to avoid the current object being polluted
+		glBindVertexArray(0);
+		glUseProgram(0);
     }
        
     void cleanup(){
-        // TODO cleanup
+		cloudsGenerator.cleanup();
     }
     
     void draw(const mat4& view, const mat4& projection, const vec3& cam_pos){
@@ -87,13 +122,18 @@ public:
 
 			view_id = glGetUniformLocation(_pid, "cam_pos");
 			glUniform3f(view_id, cam_pos(0), cam_pos(1), cam_pos(2));
+
 			
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, _color_tex);
             glUniform1f(glGetUniformLocation(_pid, "tex_width"), _width);
 			glActiveTexture(GL_TEXTURE1);
 			glBindTexture(GL_TEXTURE_2D, _depth_tex);
-            glUniform1f(glGetUniformLocation(_pid, "tex_height"), _height); 
+            glUniform1f(glGetUniformLocation(_pid, "tex_height"), _height);
+			glActiveTexture(GL_TEXTURE2);
+			glBindTexture(GL_TEXTURE_2D, _clouds_tex);
+
+
             glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);        
         glBindVertexArray(0);        
         glUseProgram(0);
