@@ -8,6 +8,8 @@ uniform float tex_height;
 
 uniform mat4 VP_i;
 uniform vec3 cam_pos;
+uniform vec3 light_dir = normalize(vec3(1.0, 1.0, 1.0));
+uniform float time;
 
 in vec2 uv;
 in vec2 vpos;
@@ -17,7 +19,7 @@ out vec3 color;
 
 const float CLOUD_DENSITY = 15;
 const float CLOUD_FLOOR = 0.6;
-const float CLOUD_AMPLITUDE = 6; // determines cloud top height
+const float CLOUD_AMPLITUDE = 4; // determines cloud top height
 const float CLOUD_CUTOFF = 0.8;
 // Nyquist stuff going on here: larger clouds allow smaller sampling frequency
 // and are therefore less expensive to render.
@@ -30,7 +32,7 @@ float rgb_2_luma(vec3 c){ return .3*c[0] + .59*c[1] + .11*c[2]; }
 float getCloudDensity(vec3 p) {
   //return sin(p.x*2)*max(0, sin(min(p.y - CLOUD_FLOOR, 2)*M_PI/2))*sin(p.z*2);
 
-  vec2 tc = abs(mod(vec2(p.x, p.z), CLOUD_SCALE)) * 2 / CLOUD_SCALE - 1;
+  vec2 tc = abs(mod(vec2(p.x + time/20, p.z), CLOUD_SCALE)) * 2 / CLOUD_SCALE - 1;
   float noiseval = max(0, (CLOUD_CUTOFF - texture(clouds_tex, tc).r));
   float freq = M_PI / (noiseval*CLOUD_AMPLITUDE);
 
@@ -42,12 +44,6 @@ float getCloudDensity(vec3 p) {
   return sin(min(M_PI, (p.y - cFloor) * freq)) * noiseval;
   //return noiseval*max(0, sin(min(p.y - CLOUD_FLOOR, 2)*M_PI/2)) - noiseval * p.y;
 }
-
-/*
-float linearizeDepth(float depth) {
-  return pow(depth, 20);
-}
-*/
 
 float f(float depth) {
   return sqrt(depth);
@@ -72,7 +68,15 @@ void main() {
   float step = horizon_distance / CLOUD_SAMPLING;
   vec3 direction = (farPoint - nearPoint) / horizon_distance;
 
+  vec3 view_dir = normalize(direction);
+
   float cutoff_value = min(distance(nearPoint, maxPoint), horizon_distance);
+
+  // sun
+  float vl = dot(view_dir, light_dir);
+  if (current_depth == 1 && vl > 0) {
+    current_color = min(vec3(pow(vl, 1000)) + current_color, vec3(1, 1, 1));
+  }
 
   for (float iteration_value = 0 ; iteration_value < cutoff_value ; iteration_value += step) {
 

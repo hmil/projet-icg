@@ -16,12 +16,12 @@ protected:
 	HeightmapGenerator cloudsGenerator;
 	FrameBuffer cloudsFB;
 	// clouds params
-	float H = 1.15f;
-	float lacunarity = 3.0997;
-	int octaves = 4;
+	float H = 0.9f;
+	float lacunarity = 2.5123;
+	int octaves = 5;
 
 public:
-	ScreenQuad() : cloudsFB(2048, 2048) {}
+	ScreenQuad() : cloudsFB(512, 512) {}
 
     void init(GLuint color_tex, GLuint depth_tex){ 
         
@@ -132,6 +132,8 @@ public:
             glUniform1f(glGetUniformLocation(_pid, "tex_height"), _height);
 			glActiveTexture(GL_TEXTURE2);
 			glBindTexture(GL_TEXTURE_2D, _clouds_tex);
+
+			glUniform1f(glGetUniformLocation(_pid, "time"), glfwGetTime());
 
 
             glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);        
