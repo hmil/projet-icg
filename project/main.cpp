@@ -3,6 +3,7 @@
 #include "FrameBuffer.h"
 #include "Water.h"
 #include "ScreenQuad.h"
+#include "Cube.h"
 
 int width=1280, height=720;
 
@@ -12,6 +13,7 @@ FrameBuffer fb_main(width, height);
 FrameBuffer fb_mirrored(width, height);
 FrameBuffer fb_quad(width, height);
 ScreenQuad sqad;
+Cube skybox;
 
 vec3 cam_pos(2103, 1, 2125);
 //vec3 cam_pos(0, 1, 0);
@@ -36,6 +38,8 @@ void init(){
     glEnable(GL_DEPTH_TEST);
 
 	world.init(vec2(cam_pos(0), cam_pos(2)), sky_color);
+	skybox.init();
+
 	GLuint fb_main_tex = fb_main.init(true);
 	GLuint fb_mirr_tex = fb_mirrored.init(true);
 	GLuint fb_quad_tex = fb_quad.init(true);
@@ -64,6 +68,7 @@ void display(){
 	// And the whole map is translated down by water_level units
 	// TODO: move hardcoded water level smw else
 	model(1, 3) = -0.3f;
+	mat4 skybox_model = model;
     
 	// Floats get rough at high values so we keep the position near 0
 	vec2 cam_pos_memo(cam_pos(0), cam_pos(2));
@@ -76,6 +81,7 @@ void display(){
 	cam_look(1) = cam_pos(1) - sin(angles(1));
 
 	mat4 view = Eigen::lookAt(cam_pos, cam_look, cam_up);
+	mat4 skybox_view = view;
 
 	// mirror camera
 	cam_pos(1) = -cam_pos(1);
@@ -87,18 +93,23 @@ void display(){
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		if (cam_pos(1) > 0)
 			glEnable(GL_CLIP_DISTANCE0);
-		world.draw(model, mirrored_view, projection, cam_pos(1));
+
+		skybox.draw(skybox_model, mirrored_view, projection);
+		//world.draw(model, mirrored_view, projection, cam_pos(1));
 		glDisable(GL_CLIP_DISTANCE0);
 	fb_mirrored.unbind();
 
 	fb_main.bind();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		world.draw(model, view, projection, cam_pos(1));
+		skybox.draw(skybox_model, skybox_view, projection);
+		//world.draw(model, view, projection, cam_pos(1));
 	fb_main.unbind();
 	
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	world.draw(model, view, projection, cam_pos(1));
-	water.draw(mat4::Identity(), view, projection);
+	skybox.draw(skybox_model, skybox_view, projection);
+	
+	//world.draw(model, view, projection, cam_pos(1));
+	//water.draw(mat4::Identity(), view, projection);
 	
 	
 	//sqad.draw();
