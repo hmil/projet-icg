@@ -74,6 +74,7 @@ void display(){
 	vec2 cam_pos_memo(cam_pos(0), cam_pos(2));
 	cam_pos(0) = 0;
 	cam_pos(2) = 0;
+	//cam_pos(1) = world.currentHeight();
 
 	// compute camera view from angles
 	cam_look(0) = cam_pos(0) - sin(angles(0))*cos(angles(1));

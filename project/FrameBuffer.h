@@ -35,7 +35,13 @@ public:
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
-    void init(bool use_interpolation = false) {        
+	GLuint getFbo() {
+		return _fbo;
+	}
+
+
+    void init(bool use_interpolation = false) {       
+
         ///--- Create color attachment
         {
             glGenTextures(1, &_color_tex);

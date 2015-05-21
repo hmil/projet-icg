@@ -127,6 +127,10 @@ public:
 		}
 	}
 
+	float currentHeight() {
+		return active_tiles[TILES_SPAN / 2][TILES_SPAN / 2]->currentHeight();
+	}
+
 	void cleanup() {
 		for (int i = 0; i < TILES_SPAN; ++i) {
 			for (int j = 0; j < TILES_SPAN; ++j) {

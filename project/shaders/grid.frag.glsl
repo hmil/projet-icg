@@ -71,7 +71,7 @@ vec4 classicShading() {
 
   // Computing base color from textures
   vec3 baseColor =
-            grassAmount* texture(grass_tex, gUV * 100).rgb
+            grassAmount* texture(grass_tex, gUV * 6).rgb
           + rockAmount * texture(rock_tex , gUV * 100).rgb
           + sandAmount * texture(sand_tex , gUV * 60 ).rgb
           + snowAmount * texture(snow_tex , gUV * 30 ).rgb;
