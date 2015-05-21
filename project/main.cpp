@@ -81,7 +81,10 @@ void display(){
 	cam_look(1) = cam_pos(1) - sin(angles(1));
 
 	mat4 view = Eigen::lookAt(cam_pos, cam_look, cam_up);
-	mat4 skybox_view = view;
+	
+	vec3 cam_look2 = cam_look;
+	cam_look2(1) = cam_look(1) - cam_pos(1);
+	mat4 skybox_view = Eigen::lookAt(vec3(0, 0, 0), cam_look2, cam_up);
 
 	// mirror camera
 	cam_pos(1) = -cam_pos(1);
