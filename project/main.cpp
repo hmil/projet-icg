@@ -95,21 +95,21 @@ void display(){
 			glEnable(GL_CLIP_DISTANCE0);
 
 		skybox.draw(skybox_model, mirrored_view, projection);
-		//world.draw(model, mirrored_view, projection, cam_pos(1));
+		world.draw(model, mirrored_view, projection, cam_pos(1));
 		glDisable(GL_CLIP_DISTANCE0);
 	fb_mirrored.unbind();
 
 	fb_main.bind();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		skybox.draw(skybox_model, skybox_view, projection);
-		//world.draw(model, view, projection, cam_pos(1));
+		world.draw(model, view, projection, cam_pos(1));
 	fb_main.unbind();
 	
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	skybox.draw(skybox_model, skybox_view, projection);
 	
-	//world.draw(model, view, projection, cam_pos(1));
-	//water.draw(mat4::Identity(), view, projection);
+	world.draw(model, view, projection, cam_pos(1));
+	water.draw(mat4::Identity(), view, projection);
 	
 	
 	//sqad.draw();

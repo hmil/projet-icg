@@ -5,10 +5,9 @@ in vec3 position;
 out vec3 texcoords;
 
 void main() {
-    vec4 pos = mvp * vec4(position, 1.0);
-    //pos.y = -1*pos.y;
-    gl_Position = pos;
+    vec4 glpos = mvp * vec4(vec3(position.x, -position.y, position.z), 1.0);
+	//glpos.y = -glpos.y;
+	gl_Position = glpos;
 
-	vec3 pos2 = position;
-	texcoords = pos2;
+	texcoords = position;
 }

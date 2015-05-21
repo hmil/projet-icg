@@ -27,7 +27,7 @@ public:
         glBindVertexArray(_vao);
 
         // Position buffer
-		float dim = 4.5f;
+		float dim = 4.9f;
 		const GLfloat position[] = { -dim, -dim, dim,  // left, bottom, front
 			dim, -dim, dim,  // right, bottom, front
 			dim, dim, dim,  // right, top, front
@@ -70,14 +70,17 @@ public:
 
 		
 		// TEX
+		
 		const char* const faces[] = {
 			"textures/skybox/right.tga",
 			"textures/skybox/left.tga",
-			"textures/skybox/top.tga",
-			"textures/skybox/bottom.tga",
-			"textures/skybox/back.tga",
-			"textures/skybox/front.tga"
+			"textures/skybox/bottom.tga", // OK
+			"textures/skybox/top.tga", // OK
+			
+			"textures/skybox/front.tga",
+			"textures/skybox/back.tga"
 		};
+
 		glGenTextures(1, &_tex);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, _tex);
