@@ -60,9 +60,6 @@ void display(){
     static mat4 projection = Eigen::perspective(45.0f, ratio, 0.01f, 10.0f);
     vec3 cam_up(0.0f, 1.0f, 0.0f);
 
-	vec2 clouds_offset;
-	clouds_offset(0) = glfwGetTime() / 20;
-
 	mat4 model = mat4::Identity();
 	// For simplicity: water is at height 0
 	// And the whole map is translated down by water_level units
@@ -97,7 +94,7 @@ void display(){
 	fb_mirrored.bind();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		vec3 sfx_mirror_cam_pos(cam_pos_memo(0), -cam_pos(1), cam_pos_memo(1));
-		sqad.draw(mirrored_view, projection, sfx_mirror_cam_pos, clouds_offset);
+		sqad.draw(mirrored_view, projection, sfx_mirror_cam_pos);
 	fb_mirrored.unbind();
 
 	
@@ -117,7 +114,7 @@ void display(){
 	cam_pos(2) = cam_pos_memo(1);
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	sqad.draw(view, projection, cam_pos, clouds_offset);
+	sqad.draw(view, projection, cam_pos);
 
 }
 

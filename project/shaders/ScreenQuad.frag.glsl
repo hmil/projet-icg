@@ -9,7 +9,7 @@ uniform float tex_height;
 uniform mat4 VP_i;
 uniform vec3 cam_pos;
 uniform vec3 light_dir = normalize(vec3(-1.0, 1.0, -1.0));
-uniform vec2 clouds_offset;
+uniform float time;
 
 in vec2 uv;
 in vec2 vpos;
@@ -20,7 +20,7 @@ out vec3 color;
 const float CLOUD_DENSITY = 10;
 const float CLOUD_FLOOR = 0.6;
 const float CLOUD_AMPLITUDE = 4; // determines cloud top height
-const float CLOUD_CUTOFF = 0.7;
+const float CLOUD_CUTOFF = 0.75;
 // Nyquist stuff going on here: larger clouds allow smaller sampling frequency
 // and are therefore less expensive to render.
 // If it laggs: turn sampling down. If it flickers: turn scale up.
@@ -30,7 +30,7 @@ const int CLOUD_SAMPLING = 70;
 float rgb_2_luma(vec3 c){ return .3*c[0] + .59*c[1] + .11*c[2]; }
 
 vec2 makeCloudTexCoord(vec2 uv) {
-  return abs(mod(vec2(uv.x, uv.y)/* + clouds_offset*/, CLOUD_SCALE)) * 2 / CLOUD_SCALE - 1;
+  return abs(mod(vec2(uv.x + time/20, uv.y), CLOUD_SCALE)) * 2 / CLOUD_SCALE - 1;
 }
 
 float getCloudDensity(vec3 p) {
@@ -108,7 +108,7 @@ void main() {
 
     float density = getCloudDensity(world_point);
 
-    vec3 cloudColor = mix(vec3(0.40, 0.45, 0.49), vec3(0.85, 0.90, 0.95), clamp((world_point.y - CLOUD_FLOOR)*2*density*CLOUD_AMPLITUDE + 0.5, 0, 1));
+    vec3 cloudColor = mix(vec3(0.50, 0.55, 0.59), vec3(0.85, 0.90, 0.95), clamp((world_point.y - CLOUD_FLOOR)*3*density*CLOUD_AMPLITUDE + 0.5, 0, 1));
 
     current_color = mix(current_color, cloudColor, min(max(density, 0)*coeff*CLOUD_DENSITY, 1));
   }

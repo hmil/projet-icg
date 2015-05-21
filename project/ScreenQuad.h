@@ -107,7 +107,7 @@ public:
 		cloudsGenerator.cleanup();
     }
     
-	void draw(const mat4& view, const mat4& projection, const vec3& cam_pos, const vec2& clouds_offset){
+	void draw(const mat4& view, const mat4& projection, const vec3& cam_pos){
         glUseProgram(_pid);
         glBindVertexArray(_vao);
 			
@@ -130,7 +130,7 @@ public:
 			glActiveTexture(GL_TEXTURE2);
 			glBindTexture(GL_TEXTURE_2D, _clouds_tex);
 
-			glUniform2f(glGetUniformLocation(_pid, "clouds_offset"), clouds_offset(0), clouds_offset(1));
+			glUniform1f(glGetUniformLocation(_pid, "time"), glfwGetTime());
 
 
             glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);        
