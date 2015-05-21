@@ -8,8 +8,8 @@ uniform float tex_height;
 
 uniform mat4 VP_i;
 uniform vec3 cam_pos;
-uniform vec3 light_dir = normalize(vec3(1.0, 1.0, 1.0));
-uniform float time;
+uniform vec3 light_dir = normalize(vec3(-1.0, 1.0, -1.0));
+uniform vec2 clouds_offset;
 
 in vec2 uv;
 in vec2 vpos;
@@ -17,22 +17,26 @@ out vec3 color;
 
 #define M_PI 3.1415
 
-const float CLOUD_DENSITY = 15;
+const float CLOUD_DENSITY = 10;
 const float CLOUD_FLOOR = 0.6;
 const float CLOUD_AMPLITUDE = 4; // determines cloud top height
-const float CLOUD_CUTOFF = 0.8;
+const float CLOUD_CUTOFF = 0.7;
 // Nyquist stuff going on here: larger clouds allow smaller sampling frequency
 // and are therefore less expensive to render.
 // If it laggs: turn sampling down. If it flickers: turn scale up.
 const int CLOUD_SCALE = 30;
-const int CLOUD_SAMPLING = 50;
+const int CLOUD_SAMPLING = 70;
 
 float rgb_2_luma(vec3 c){ return .3*c[0] + .59*c[1] + .11*c[2]; }
+
+vec2 makeCloudTexCoord(vec2 uv) {
+  return abs(mod(vec2(uv.x, uv.y)/* + clouds_offset*/, CLOUD_SCALE)) * 2 / CLOUD_SCALE - 1;
+}
 
 float getCloudDensity(vec3 p) {
   //return sin(p.x*2)*max(0, sin(min(p.y - CLOUD_FLOOR, 2)*M_PI/2))*sin(p.z*2);
 
-  vec2 tc = abs(mod(vec2(p.x + time/20, p.z), CLOUD_SCALE)) * 2 / CLOUD_SCALE - 1;
+  vec2 tc = makeCloudTexCoord(vec2(p.x, p.z));
   float noiseval = max(0, (CLOUD_CUTOFF - texture(clouds_tex, tc).r));
   float freq = M_PI / (noiseval*CLOUD_AMPLITUDE);
 
@@ -78,15 +82,35 @@ void main() {
     current_color = min(vec3(pow(vl, 1000)) + current_color, vec3(1, 1, 1));
   }
 
-  for (float iteration_value = 0 ; iteration_value < cutoff_value ; iteration_value += step) {
+  // Poor man's shadow map
+  if (current_depth != 1) {
+    // Take the world point corresponding to that pixel
+    vec3 shadowPoint = maxPoint + vec3(cam_pos.x, 0, cam_pos.z);
+
+    // sample the clouds above it
+    shadowPoint.y = CLOUD_FLOOR;
+    float d = getCloudDensity(shadowPoint);
+
+    // And shade accordingly
+    current_color = mix(current_color, vec3(0, 0, 0), d*3);
+  }
+
+  float iteration_value;
+  for (iteration_value = 0 ; iteration_value < cutoff_value ; iteration_value += step) { }
+  iteration_value -= step;
+
+  for ( ; iteration_value > 0.1 ; iteration_value -= step) {
 
     vec3 world_point = nearPoint + direction * iteration_value + vec3(cam_pos.x, 0, cam_pos.z);
+    //
     float coeff = min(iteration_value + step, cutoff_value) - iteration_value;
 
 
     float density = getCloudDensity(world_point);
 
-    current_color = mix(current_color, vec3(0.85, 0.90, 0.95), min(max(density, 0)*coeff*CLOUD_DENSITY, 1));
+    vec3 cloudColor = mix(vec3(0.40, 0.45, 0.49), vec3(0.85, 0.90, 0.95), clamp((world_point.y - CLOUD_FLOOR)*2*density*CLOUD_AMPLITUDE + 0.5, 0, 1));
+
+    current_color = mix(current_color, cloudColor, min(max(density, 0)*coeff*CLOUD_DENSITY, 1));
   }
 
   color = current_color;
