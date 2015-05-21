@@ -7,7 +7,7 @@ struct Light{
 	vec3 Id = vec3(0.85f, 0.9f, 1.0f);
 	vec3 Is = vec3(1.0f, 1.0f, 1.0f);
 
-	vec3 light_dir = vec3(1.0f, 1.0f, 1.0f);
+	vec3 light_dir = vec3(-1.0f, 0.75f, 0.0f);
 
 	///--- Pass light properties to the shader
 	void setup(GLuint _pid){

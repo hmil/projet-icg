@@ -3,6 +3,7 @@
 #include "FrameBuffer.h"
 #include "Water.h"
 #include "ScreenQuad.h"
+#include "Cube.h"
 
 int width=1280, height=720;
 
@@ -12,6 +13,7 @@ FrameBuffer fb_main(width, height);
 FrameBuffer fb_mirrored(width, height);
 FrameBuffer fb_quad(width, height);
 ScreenQuad sqad;
+Cube skybox;
 
 vec3 cam_pos(2103, 1, 2125);
 //vec3 cam_pos(0, 1, 0);
@@ -39,6 +41,7 @@ void init(){
 	fb_main.init(true);
 	fb_mirrored.init(true);
 	fb_quad.init(true);
+	skybox.init();
 
 	water.init(fb_main.getColorAttachment(), fb_mirrored.getColorAttachment());
 
@@ -65,6 +68,7 @@ void display(){
 	// And the whole map is translated down by water_level units
 	// TODO: move hardcoded water level smw else
 	model(1, 3) = -0.3f;
+	mat4 skybox_model = model;
     
 	// Floats get rough at high values so we keep the position near 0
 	vec2 cam_pos_memo(cam_pos(0), cam_pos(2));
@@ -77,6 +81,10 @@ void display(){
 	cam_look(1) = cam_pos(1) - sin(angles(1));
 
 	mat4 view = Eigen::lookAt(cam_pos, cam_look, cam_up);
+	
+	vec3 cam_look2 = cam_look;
+	cam_look2(1) = cam_look(1) - cam_pos(1);
+	mat4 skybox_view = Eigen::lookAt(vec3(0, 0, 0), cam_look2, cam_up);
 
 	// mirror camera
 	cam_pos(1) = -cam_pos(1);
@@ -88,6 +96,8 @@ void display(){
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		if (cam_pos(1) > 0)
 			glEnable(GL_CLIP_DISTANCE0);
+
+		skybox.draw(skybox_model, mirrored_view, projection);
 		world.draw(model, mirrored_view, projection, cam_pos(1));
 		glDisable(GL_CLIP_DISTANCE0);
 	fb_quad.unbind();
@@ -100,15 +110,17 @@ void display(){
 	
 	fb_main.bind();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		skybox.draw(skybox_model, skybox_view, projection);
 		world.draw(model, view, projection, cam_pos(1));
 	fb_main.unbind();
 	
 	fb_quad.bind();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		skybox.draw(skybox_model, skybox_view, projection);
 		world.draw(model, view, projection, cam_pos(1));
 		water.draw(mat4::Identity(), view, projection);
 	fb_quad.unbind();
-	
+
 	// restore camera
 	cam_pos(0) = cam_pos_memo(0);
 	cam_pos(2) = cam_pos_memo(1);
