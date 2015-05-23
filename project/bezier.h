@@ -92,6 +92,13 @@ public:
         bezier(_hull);
         compute_parameterization();
     }
+	void print_points() {
+		std::cout << _hull.p1()(0) << ", " << _hull.p1()(1) << ", " << _hull.p1()(2) << std::endl;
+		std::cout << _hull.p2()(0) << ", " << _hull.p2()(1) << ", " << _hull.p2()(2) << std::endl;
+		std::cout << _hull.p3()(0) << ", " << _hull.p3()(1) << ", " << _hull.p3()(2) << std::endl;
+		std::cout << _hull.p4()(0) << ", " << _hull.p4()(1) << ", " << _hull.p4()(2) << std::endl;
+	}
+
     static bool cmp(const Scalar &a, const Scalar &b){
         return (a<b);
     }

@@ -92,6 +92,7 @@ vec4 classicShading() {
   }
   finalColor = disperseUnderwater(finalColor, disperse_distance);
 
+  // return vec4(finalColor, 0.7); // set this to help with curves design
   return vec4(finalColor, 1);
 }
 

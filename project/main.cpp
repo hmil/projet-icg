@@ -20,8 +20,8 @@ FrameBuffer fb_quad(width, height);
 ScreenQuad sqad;
 Cube skybox;
 
-//vec3 cam_pos(2130, 1, 2125);
-vec3 cam_pos(0, 1, 0);
+vec3 cam_pos(72, 1, 52);
+//vec3 cam_pos(0, 1, 0);
 vec3 cam_look;
 vec2 angles(0, 0);
 vec2 old_angles;
@@ -69,13 +69,13 @@ void initCurves() {
 	if (!_pid_point_selection) exit(EXIT_FAILURE);
 
 	///--- init cam_pos_curve
-	cam_pos_points.push_back(ControlPoint(-0.79f, 0.09f, 0.2f, 0));
-	cam_pos_points.push_back(ControlPoint(-0.88f, -0.71f, 0.2f, 1));
-	cam_pos_points.push_back(ControlPoint(1.3f, -0.8f, 0.2f, 2));
-	cam_pos_points.push_back(ControlPoint(0.71f, 0.76f, 0.2f, 3));
-	cam_pos_points.push_back(ControlPoint(0.5f, 0.5f, 0.2f, 4));
-	cam_pos_points.push_back(ControlPoint(0.5f, 0.76f, 0.1f, 5));
-	cam_pos_points.push_back(ControlPoint(0.5f, 0.5f, 0.1f, 6));
+	cam_pos_points.push_back(ControlPoint(72.0f, 1.0f, 52.0f, 3));
+	cam_pos_points.push_back(ControlPoint(72.0f, 1.5f, 52.0f, 2));
+	cam_pos_points.push_back(ControlPoint(71.0f, 1.5f, 52.0f, 1));
+	cam_pos_points.push_back(ControlPoint(71.0f, 1.0f, 52.0f, 0));
+	cam_pos_points.push_back(ControlPoint(71.0f, 0.5f, 52.0f, 4));
+	cam_pos_points.push_back(ControlPoint(71.0f, 0.5f, 53.0f, 5));
+	cam_pos_points.push_back(ControlPoint(71.0f, 1.0f, 53.0f, 6));
 
 	for (unsigned int i = 0; i < cam_pos_points.size(); i++) {
 		cam_pos_points[i].id() = i;
@@ -87,13 +87,13 @@ void initCurves() {
 		cam_pos_curve[i].set_points(cam_pos_points[i * 3].position(), cam_pos_points[i * 3 + 1].position(), cam_pos_points[i * 3 + 2].position(), cam_pos_points[i * 3 + 3].position());
 	}
 
-	cam_look_points.push_back(ControlPoint(0, 0, 0, 100));
-	cam_look_points.push_back(ControlPoint(0.01f, 0.01f, 0.01f, 101));
-	cam_look_points.push_back(ControlPoint(0.1f, 0.1f, 0.2f, 102));
-	cam_look_points.push_back(ControlPoint(0.3f, 0.2f, 0.1f, 103));
-	cam_look_points.push_back(ControlPoint(0.1f, 0.1f, 0.0f, 104));
-	cam_look_points.push_back(ControlPoint(0.5f, 0.6f, 0.7f, 105));
-	cam_look_points.push_back(ControlPoint(0.5f, 0, 0.1f, 106));
+	cam_look_points.push_back(ControlPoint(70.0f, 0.5f, 53.0f, 100));
+	cam_look_points.push_back(ControlPoint(70.0f, 0.5f, 53.0f, 101));
+	cam_look_points.push_back(ControlPoint(70.01f, 0.5f, 53.0f, 102));
+	cam_look_points.push_back(ControlPoint(70.0f, 0.5f, 52.0f, 103));
+	cam_look_points.push_back(ControlPoint(70.0f, 0.5f, 51.0f, 104));
+	cam_look_points.push_back(ControlPoint(70.0f, 1.0f, 51.0f, 105));
+	cam_look_points.push_back(ControlPoint(70.0f, 1.5f, 51.0f, 106));
 
 	for (unsigned int i = 0; i < cam_look_points.size(); i++) {
 		cam_look_points[i].id() = i + 100;
@@ -136,6 +136,7 @@ void display(){
     opengp::update_title_fps("FrameBuffer");
     glViewport(0,0,width,height);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glEnable(GL_BLEND);
 
     ///--- Setup view-projection matrix
     float ratio = width / (float) height;
@@ -148,6 +149,8 @@ void display(){
 	// TODO: move hardcoded water level smw else
 	model(1, 3) = -0.3f;
 	mat4 skybox_model = model;
+
+	mat4 world_model(model);
     
 	// Floats get rough at high values so we keep the position near 0
 	vec2 cam_pos_memo(cam_pos(0), cam_pos(2));
@@ -196,16 +199,14 @@ void display(){
 	fb_quad.bind();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		skybox.draw(skybox_model, skybox_view, projection);
-		world.draw(model, view, projection, cam_pos(1));
-		water.draw(mat4::Identity(), view, projection);
 
 		// restore camera
 		cam_pos(0) = cam_pos_memo(0);
 		cam_pos(2) = cam_pos_memo(1);
 
+#ifdef EDIT_CURVES
 		model(0, 3) = -cam_pos(0);
 		model(2, 3) = -cam_pos(2);
-#ifdef EDIT_CURVES
 		for (unsigned int i = 0; i < cam_pos_points.size(); i++) {
 			cam_pos_points[i].draw(model, view, projection);
 		}
@@ -221,6 +222,8 @@ void display(){
 			cam_look_curve[i].draw(model, view, projection);
 		}
 #endif
+		world.draw(world_model, view, projection, cam_pos(1));
+		water.draw(mat4::Identity(), view, projection);
 	fb_quad.unbind();
 
 	
@@ -291,7 +294,7 @@ bool unproject(int mouse_x, int mouse_y, vec3 &p) {
 
 	// Screen-space unprojection
 	// 1) Compute the inverse of VP
-	mat4 pv = (projection * view).inverse();
+	mat4 pv = (projection * view * model).inverse();
 
 	vec4 point = projection * view * model * vec4(p(0), p(1), p(2), 1.0f);
 
@@ -315,7 +318,7 @@ void mouse_button(int button, int action) {
 #ifdef EDIT_CURVES
 	static int x_pressed = 0, y_pressed = 0;
 
-	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+	if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS) {
 		int x = 0, y = 0;
 		glfwGetMousePos(&x, &y);
 		x_pressed = x; y_pressed = y;
@@ -331,13 +334,12 @@ void mouse_button(int button, int action) {
 
 		if (selected_point >= 0 && selected_point < cam_pos_points.size()) {
 			cam_pos_points[selected_point].selected() = true;
-			return;
 		}
 		else if (selected_point >= 100 && selected_point < cam_look_points.size() + 100) {
 			cam_look_points[selected_point - 100].selected() = true;
-			return;
 		}
-	} else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) {
+	}
+	else if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE) {
 		if (selected_point >= 0 && selected_point < cam_pos_points.size()) {
 			cam_pos_points[selected_point].selected() = false;
 		}
@@ -362,7 +364,7 @@ void mouse_button(int button, int action) {
 		if (selected_point >= 100 && selected_point < cam_look_points.size() + 100) {
 			unproject(x, y, cam_look_points[selected_point - 100].position());
 
-			for (unsigned int i = 0; i < POS_CURVE_N; i++) {
+			for (unsigned int i = 0; i < LOOK_CURVE_N; i++) {
 				cam_look_curve[i].set_points(cam_look_points[i * 3].position(), cam_look_points[i * 3 + 1].position(), cam_look_points[i * 3 + 2].position(), cam_look_points[i * 3 + 3].position());
 			}
 		}
@@ -428,6 +430,20 @@ void keyboard(int key, int action) {
 		case 'D':
 			keys[KEY_RIGHT] = true;
 			return;
+#ifdef EDIT_CURVES
+		case 'C': 
+			// output curves ctrl points
+			std::cout << "-- curves dump --" << std::endl << "position:" << std::endl;
+			for (unsigned int i = 0; i < POS_CURVE_N; i++) {
+				cam_pos_curve[i].print_points();
+			}
+			std::cout << "look:" << std::endl;
+			for (unsigned int i = 0; i < LOOK_CURVE_N; i++) {
+				cam_look_curve[i].print_points();
+			}
+
+
+#endif
 		case ' ':
 			speedup = true;
 			return;
