@@ -14,7 +14,6 @@ int width=1280, height=720;
 
 Map world;
 Water water;
-FrameBuffer fb_main(width, height);
 FrameBuffer fb_mirrored(width, height);
 FrameBuffer fb_quad(width, height);
 ScreenQuad sqad;
@@ -117,12 +116,11 @@ void init(){
 #endif
 
 	world.init(vec2(cam_pos(0), cam_pos(2)), sky_color);
-	fb_main.init(true);
 	fb_mirrored.init(true);
 	fb_quad.init(true);
 	skybox.init();
 
-	water.init(fb_main.getColorAttachment(), fb_mirrored.getColorAttachment());
+	water.init(fb_mirrored.getColorAttachment());
 
 	sqad.init(fb_quad.getColorAttachment(), fb_quad.getDepthAttachment());
 
@@ -188,13 +186,6 @@ void display(){
 		vec3 sfx_mirror_cam_pos(cam_pos_memo(0), -cam_pos(1), cam_pos_memo(1));
 		sqad.draw(mirrored_view, projection, sfx_mirror_cam_pos);
 	fb_mirrored.unbind();
-
-	
-	fb_main.bind();
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		skybox.draw(skybox_model, skybox_view, projection);
-		world.draw(model, view, projection, cam_pos(1));
-	fb_main.unbind();
 	
 	fb_quad.bind();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -455,7 +446,6 @@ void keyboard(int key, int action) {
 
 void cleanup(){
 	world.cleanup();
-	fb_main.cleanup();
 	fb_mirrored.cleanup();
 
 #ifdef EDIT_CURVES

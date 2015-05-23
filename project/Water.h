@@ -7,14 +7,13 @@ protected:
     GLuint _pid; ///< GLSL shader program ID
     GLuint _vbo; ///< memory buffer
     GLuint _tex_mirror; ///< Texture ID of mirror texture
-	GLuint _tex_through; ///< Texture ID of underneath texture
 
 	const float PLANE_SIZE = 10;
 
 	vec2 _cam_pos;
 
 public:
-    void init(GLuint tex_through, GLuint tex_mirror){
+    void init(GLuint tex_mirror){
         ///--- Compile the shaders
         _pid = opengp::load_shaders("shaders/water.vert.glsl", "shaders/water.frag.glsl");
         if(!_pid) exit(EXIT_FAILURE);
@@ -61,7 +60,6 @@ public:
         }
 
         _tex_mirror = tex_mirror;
-		_tex_through = tex_through;
 
         ///--- Texture uniforms
         GLuint tex_through_id = glGetUniformLocation(_pid, "tex_through");
@@ -88,8 +86,6 @@ public:
 			glUniform1f(tex_mirror_id, glfwGetTime()*5);
 
             ///--- Bind textures
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, _tex_through);
             glActiveTexture(GL_TEXTURE1);
             glBindTexture(GL_TEXTURE_2D, _tex_mirror);
 

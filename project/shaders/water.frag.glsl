@@ -1,5 +1,5 @@
 #version 330 core
-out vec3 color;
+out vec4 color;
 in vec2 uv;
 in vec4 view_dir;
 in vec2 world_pos;
@@ -53,12 +53,14 @@ void main() {
     // Mixing and distorting. No reflection has gone into this "+ distortion" thing. It might actually completely wrong.
     // TODO: investigate to see if distortion on reflection matches distortion on refraction in a realistic way
 
-	float mix_coeff = clamp(1 - view_dir_coeff, 0, 1);
-	color = mix( texture(tex_through, vec2(u,v) + distortion).rgb, texture(tex_mirror, vec2(u,1-v) + distortion).rgb, mix_coeff);
+    // scale from [0-1] to [0.15-0.85] to avoid full refraction / full passthrough
+	float mix_coeff = clamp((1 - view_dir_coeff)*0.7 + 0.15, 0, 1);
 
     // underwater loss of light
     if (view_dir.y < 0) {
-        color = disperseUnderwater(color, getDepth());
+        color = vec4(disperseUnderwater(texture(tex_mirror, vec2(u,1-v) + distortion).rgb, getDepth()), min(1, mix_coeff + 0.4));
+    } else {
+	   color = vec4(texture(tex_mirror, vec2(u,1-v) + distortion).rgb, mix_coeff);
     }
 
     //color = vec3(distortion.x * 100, distortion.y * 100, 0);
