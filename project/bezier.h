@@ -108,7 +108,7 @@ public:
             return;
         }
 
-        sample = decastel(_hull, t);
+        sample = decastel(_hull, 1 - t);
     }
     void draw(const mat4& model, const mat4& view, const mat4& projection){
         if (_vertices.empty()) return;

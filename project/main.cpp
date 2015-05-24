@@ -10,12 +10,21 @@
 
 #define EDIT_CURVES
 
+#define BEZIER_SPEED 0.01
+#define SEA_LEVEL 0.3f
+
+enum NAVIGATION_MODE {
+	NAVIGATION,
+	BEZIER
+} navmode;
+
 int width=1280, height=720;
 
 Map world;
 Water water;
 FrameBuffer fb_mirrored(width, height);
 FrameBuffer fb_quad(width, height);
+FrameBuffer fb_main(width, height);
 ScreenQuad sqad;
 Cube skybox;
 
@@ -36,18 +45,17 @@ vec3 sky_color(0.60, 0.70, 0.85);
 #define KEY_RIGHT	3
 bool keys[] = { false, false, false, false };
 bool speedup = false;
+int current_frame(0);
 
 mat4 model, view, projection;
 
 bool is_dragging;
 
-#ifdef EDIT_CURVES
-
 #define POS_CURVE_N  2
-#define LOOK_CURVE_N 2
+#define TIME_PER_FRAME 0.06
 
 BezierCurve cam_pos_curve[POS_CURVE_N];
-BezierCurve cam_look_curve[LOOK_CURVE_N];
+BezierCurve cam_look_curve[POS_CURVE_N];
 std::vector<ControlPoint> cam_pos_points;
 std::vector<ControlPoint> cam_look_points;
 int selected_point(-1);
@@ -99,28 +107,26 @@ void initCurves() {
 		cam_look_points[i].init(_pid_point, _pid_point_selection);
 	}
 
-	for (unsigned int i = 0; i < LOOK_CURVE_N; i++) {
+	for (unsigned int i = 0; i < POS_CURVE_N; i++) {
 		cam_look_curve[i].init(_pid_bezier);
 		cam_look_curve[i].set_points(cam_look_points[i * 3].position(), cam_look_points[i * 3 + 1].position(), cam_look_points[i * 3 + 2].position(), cam_look_points[i * 3 + 3].position());
 	}
 }
-#endif
 
 void init(){
 	glClearColor(sky_color(0), sky_color(1), sky_color(2), /*solid*/1.0);
     glEnable(GL_DEPTH_TEST);
 
 
-#ifdef EDIT_CURVES
 	initCurves();
-#endif
 
 	world.init(vec2(cam_pos(0), cam_pos(2)), sky_color);
 	fb_mirrored.init(true);
 	fb_quad.init(true);
+	fb_main.init(true);
 	skybox.init();
 
-	water.init(fb_mirrored.getColorAttachment());
+	water.init(fb_main.getColorAttachment(), fb_mirrored.getColorAttachment());
 
 	sqad.init(fb_quad.getColorAttachment(), fb_quad.getDepthAttachment());
 
@@ -141,24 +147,33 @@ void display(){
     projection = Eigen::perspective(45.0f, ratio, 0.01f, 10.0f);
     vec3 cam_up(0.0f, 1.0f, 0.0f);
 
-	model = mat4::Identity();
-	// For simplicity: water is at height 0
-	// And the whole map is translated down by water_level units
-	// TODO: move hardcoded water level smw else
-	model(1, 3) = -0.3f;
-	mat4 skybox_model = model;
-
-	mat4 world_model(model);
-    
 	// Floats get rough at high values so we keep the position near 0
 	vec2 cam_pos_memo(cam_pos(0), cam_pos(2));
 	cam_pos(0) = 0;
 	cam_pos(2) = 0;
 
-	// compute camera view from angles
-	cam_look(0) = cam_pos(0) - sin(angles(0))*cos(angles(1));
-	cam_look(2) = cam_pos(2) + cos(angles(0))*cos(angles(1));
-	cam_look(1) = cam_pos(1) - sin(angles(1));
+	model = mat4::Identity();
+	// For simplicity: water is at height 0
+	// And the whole map is translated down by water_level units
+	// TODO: move hardcoded water level smw else
+	model(1, 3) = -SEA_LEVEL;
+	mat4 skybox_model = model;
+
+	mat4 world_model(model);
+
+	float time = glfwGetTime();
+	// In bezier mode, use per frame timing to get perfect movie synchro
+	if (navmode == BEZIER) {
+		time = current_frame * TIME_PER_FRAME;
+	}
+	else {
+		// compute camera view from angles
+		cam_look(0) = cam_pos(0) - sin(angles(0))*cos(angles(1));
+		cam_look(2) = cam_pos(2) + cos(angles(0))*cos(angles(1));
+		cam_look(1) = cam_pos(1) - sin(angles(1));
+	}
+
+    
 
 	view = Eigen::lookAt(cam_pos, cam_look, cam_up);
 	
@@ -184,13 +199,19 @@ void display(){
 	fb_mirrored.bind();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		vec3 sfx_mirror_cam_pos(cam_pos_memo(0), -cam_pos(1), cam_pos_memo(1));
-		sqad.draw(mirrored_view, projection, sfx_mirror_cam_pos);
+		sqad.draw(mirrored_view, projection, sfx_mirror_cam_pos, time);
 	fb_mirrored.unbind();
+
+	fb_main.bind();
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		skybox.draw(skybox_model, skybox_view, projection);
+		world.draw(model, view, projection, cam_pos(1));
+	fb_main.unbind();
+
 	
 	fb_quad.bind();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		skybox.draw(skybox_model, skybox_view, projection);
-
 		// restore camera
 		cam_pos(0) = cam_pos_memo(0);
 		cam_pos(2) = cam_pos_memo(1);
@@ -209,7 +230,7 @@ void display(){
 		for (unsigned int i = 0; i < POS_CURVE_N; i++) {
 			cam_pos_curve[i].draw(model, view, projection);
 		}
-		for (unsigned int i = 0; i < LOOK_CURVE_N; i++) {
+		for (unsigned int i = 0; i < POS_CURVE_N; i++) {
 			cam_look_curve[i].draw(model, view, projection);
 		}
 #endif
@@ -220,33 +241,52 @@ void display(){
 	
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	sqad.draw(view, projection, cam_pos);
+	sqad.draw(view, projection, cam_pos, time);
 
 
 }
 
 void update() {
-	const int coeff = speedup ? 3 : 1;
-	// update pos
-	if (keys[KEY_FWD]) {
-		cam_pos(2) +=  coeff * MOVE_INC*cos(angles(0))*cos(angles(1));
-		cam_pos(1) -= coeff * MOVE_INC*sin(angles(1));
-		cam_pos(0) -= coeff * MOVE_INC*sin(angles(0))*cos(angles(1));
+
+	if (navmode == NAVIGATION) {
+		const int coeff = speedup ? 3 : 1;
+		// update pos
+		if (keys[KEY_FWD]) {
+			cam_pos(2) += coeff * MOVE_INC*cos(angles(0))*cos(angles(1));
+			cam_pos(1) -= coeff * MOVE_INC*sin(angles(1));
+			cam_pos(0) -= coeff * MOVE_INC*sin(angles(0))*cos(angles(1));
+		}
+		else if (keys[KEY_BWD]) {
+			cam_pos(2) -= coeff * MOVE_INC*cos(angles(0))*cos(angles(1));
+			cam_pos(1) += coeff * MOVE_INC*sin(angles(1));
+			cam_pos(0) += coeff * MOVE_INC*sin(angles(0))*cos(angles(1));
+		}
+		if (keys[KEY_LEFT]) {
+			cam_pos(2) += coeff * MOVE_INC*sin(angles(0));
+			cam_pos(0) += coeff * MOVE_INC*cos(angles(0));
+		}
+		else if (keys[KEY_RIGHT]) {
+			cam_pos(2) -= coeff * MOVE_INC*sin(angles(0));
+			cam_pos(0) -= coeff * MOVE_INC*cos(angles(0));
+		}
+		cam_look = cam_pos + vec3(0, 0, 1);
 	}
-	else if (keys[KEY_BWD]) {
-		cam_pos(2) -= coeff * MOVE_INC*cos(angles(0))*cos(angles(1));
-		cam_pos(1) += coeff * MOVE_INC*sin(angles(1));
-		cam_pos(0) += coeff * MOVE_INC*sin(angles(0))*cos(angles(1));
+	else {
+		if (current_frame * BEZIER_SPEED < POS_CURVE_N) {
+			current_frame++;
+
+			float position = current_frame * BEZIER_SPEED;
+			double curve_i;
+			float offset = modf(position, &curve_i);
+
+			cam_pos_curve[(int)curve_i].sample_point(offset, cam_pos);
+			cam_pos(1) -= SEA_LEVEL;
+			cam_look_curve[(int)curve_i].sample_point(offset, cam_look);
+			cam_look(0) -= cam_pos(0); // because camera is centered at 0,0
+			cam_look(2) -= cam_pos(2);
+			cam_look(1) -= SEA_LEVEL;
+		}
 	}
-	if (keys[KEY_LEFT]) {
-		cam_pos(2) += coeff * MOVE_INC*sin(angles(0));
-		cam_pos(0) += coeff * MOVE_INC*cos(angles(0));
-	}
-	else if (keys[KEY_RIGHT]) {
-		cam_pos(2) -= coeff * MOVE_INC*sin(angles(0));
-		cam_pos(0) -= coeff * MOVE_INC*cos(angles(0));
-	}
-	cam_look = cam_pos + vec3(0, 0, 1);
 
 	world.update(vec2(cam_pos(0), cam_pos(2)));
 	water.update(vec2(cam_pos(0), cam_pos(2)));
@@ -355,7 +395,7 @@ void mouse_button(int button, int action) {
 		if (selected_point >= 100 && selected_point < cam_look_points.size() + 100) {
 			unproject(x, y, cam_look_points[selected_point - 100].position());
 
-			for (unsigned int i = 0; i < LOOK_CURVE_N; i++) {
+			for (unsigned int i = 0; i < POS_CURVE_N; i++) {
 				cam_look_curve[i].set_points(cam_look_points[i * 3].position(), cam_look_points[i * 3 + 1].position(), cam_look_points[i * 3 + 2].position(), cam_look_points[i * 3 + 3].position());
 			}
 		}
@@ -421,7 +461,6 @@ void keyboard(int key, int action) {
 		case 'D':
 			keys[KEY_RIGHT] = true;
 			return;
-#ifdef EDIT_CURVES
 		case 'C': 
 			// output curves ctrl points
 			std::cout << "-- curves dump --" << std::endl << "position:" << std::endl;
@@ -429,12 +468,19 @@ void keyboard(int key, int action) {
 				cam_pos_curve[i].print_points();
 			}
 			std::cout << "look:" << std::endl;
-			for (unsigned int i = 0; i < LOOK_CURVE_N; i++) {
+			for (unsigned int i = 0; i < POS_CURVE_N; i++) {
 				cam_look_curve[i].print_points();
 			}
-
-
-#endif
+			break;
+		case 'B':
+			std::cout << "Bezier mode" << std::endl;
+			navmode = BEZIER;
+			current_frame = 0;
+			break;
+		case 'N':
+			std::cout << "Navigation mode" << std::endl;
+			navmode = NAVIGATION;
+			break;
 		case ' ':
 			speedup = true;
 			return;
@@ -448,11 +494,9 @@ void cleanup(){
 	world.cleanup();
 	fb_mirrored.cleanup();
 
-#ifdef EDIT_CURVES
 	glDeleteProgram(_pid_bezier);
 	glDeleteProgram(_pid_point);
 	glDeleteProgram(_pid_point_selection);
-#endif
 }
 
 int main(int, char**){

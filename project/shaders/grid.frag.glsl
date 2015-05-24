@@ -29,7 +29,7 @@ const float GRASS_MIN_HEIGHT = 0.3; // Also water level
 const float SNOW_MIN_HEIGHT = 0.65;
 const float SNOW_VARIANCE = 0.09;
 
-const float SLOPE_THRESHOLD = 0.25;
+const float SLOPE_THRESHOLD = 0.22;
 
 const float zNear = 0.01;
 const float zFar = 10.0;
@@ -72,7 +72,7 @@ vec4 classicShading() {
   // Computing base color from textures
   vec3 baseColor =
             grassAmount* texture(grass_tex, gUV * 100).rgb
-          + rockAmount * texture(rock_tex , gUV * 100).rgb
+          + rockAmount * texture(rock_tex , gUV * 50).rgb
           + sandAmount * texture(sand_tex , gUV * 60 ).rgb
           + snowAmount * texture(snow_tex , gUV * 30 ).rgb;
 
