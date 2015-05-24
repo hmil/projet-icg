@@ -1,5 +1,5 @@
 #version 330 core
-out vec3 color;
+out vec4 color;
 in vec2 uv;
 in vec4 view_dir;
 in vec2 world_pos;
@@ -58,12 +58,14 @@ void main() {
     // TODO: investigate to see if distortion on reflection matches distortion on refraction in a realistic way
 
     float mix_coeff = clamp(1 - view_dir_coeff, 0, 1);
-    color = mix( texture(tex_through, vec2(u,v) + distortion).rgb, texture(tex_mirror, vec2(u,1-v) + distortion).rgb, mix_coeff);
+    vec3 color_tmp = mix( texture(tex_through, vec2(u,v) + distortion).rgb, texture(tex_mirror, vec2(u,1-v) + distortion).rgb, mix_coeff);
 
     // underwater loss of light
     if (view_dir.y < 0) {
-        color = disperseUnderwater(color, getDepth());
+        color_tmp = disperseUnderwater(color_tmp, getDepth());
     }
 
+    color = vec4(color_tmp, 1);
+    // color = vec4(color_tmp, 0.3); // activate to debug curves
     //color = vec3(distortion.x * 100, distortion.y * 100, 0);
 }

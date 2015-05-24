@@ -121,5 +121,5 @@ vec4 tessellationDebugShading() {
 void main()
 {
   FragColor = classicShading();
-  //FragColor = tessellationDebugShading();
+  // FragColor = tessellationDebugShading();
 }
