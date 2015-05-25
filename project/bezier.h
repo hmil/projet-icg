@@ -21,7 +21,7 @@ private:
         vec3 _p3;
         vec3 _p4;
     };
-    
+
 private:
     Hull _hull;                  ///< Bezier control points
     std::vector<vec3> _vertices; ///< Bezier evaluated points
@@ -29,7 +29,7 @@ private:
     GLuint _vao;                 ///< Vertex array objects
     GLuint _pid;          ///< GLSL program ID
     GLuint _vbo;
-    
+
 private:
     void bezier(Hull& p, int depth=0){
         for (float i = 0 ; i <= RESOLUTION ; ++i) {
@@ -65,11 +65,11 @@ public:
     void init(GLuint pid){
         ///--- Set the (compiled) shaders
         _pid = pid;
-        
+
         /// Generate the vertex array
         glGenVertexArrays(ONE, &_vao);
         glBindVertexArray(_vao);
-        
+
         /// Generate one buffer, put the resulting identifier in vertexbuffer
         glGenBuffers(ONE, &_vbo);
         glBindBuffer(GL_ARRAY_BUFFER, _vbo);
@@ -93,10 +93,10 @@ public:
         compute_parameterization();
     }
 	void print_points() {
-		std::cout << _hull.p1()(0) << ", " << _hull.p1()(1) << ", " << _hull.p1()(2) << std::endl;
-		std::cout << _hull.p2()(0) << ", " << _hull.p2()(1) << ", " << _hull.p2()(2) << std::endl;
-		std::cout << _hull.p3()(0) << ", " << _hull.p3()(1) << ", " << _hull.p3()(2) << std::endl;
-		std::cout << _hull.p4()(0) << ", " << _hull.p4()(1) << ", " << _hull.p4()(2) << std::endl;
+		std::cout << _hull.p1()(0) << ", " << _hull.p1()(1) << ", " << _hull.p1()(2) << "," << std::endl;
+		std::cout << _hull.p2()(0) << ", " << _hull.p2()(1) << ", " << _hull.p2()(2) << "," << std::endl;
+		std::cout << _hull.p3()(0) << ", " << _hull.p3()(1) << ", " << _hull.p3()(2) << "," << std::endl;
+		std::cout << _hull.p4()(0) << ", " << _hull.p4()(1) << ", " << _hull.p4()(2) << "," << std::endl;
 	}
 
     static bool cmp(const Scalar &a, const Scalar &b){
@@ -125,7 +125,7 @@ public:
         ///--- vertices
         glBufferData(GL_ARRAY_BUFFER, sizeof(Vec3)*_vertices.size(), &_vertices[0], GL_STATIC_DRAW);
 
-        ///--- setup view matrices        
+        ///--- setup view matrices
         GLuint projection_id = glGetUniformLocation(_pid, "projection");
         glUniformMatrix4fv(projection_id, ONE, DONT_TRANSPOSE, projection.data());
         mat4 MV = view*model;
