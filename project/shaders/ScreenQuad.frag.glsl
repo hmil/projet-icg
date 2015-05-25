@@ -17,7 +17,7 @@ out vec3 color;
 #define M_PI 3.1415
 
 const float CLOUD_DENSITY = 12;
-const float CLOUD_FLOOR = 0.6;
+const float CLOUD_FLOOR = 0.7;
 const float CLOUD_AMPLITUDE = 4; // determines cloud top height
 const float CLOUD_CUTOFF = 0.77;
 // Nyquist stuff going on here: larger clouds allow smaller sampling frequency
