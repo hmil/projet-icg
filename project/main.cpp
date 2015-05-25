@@ -9,6 +9,7 @@
 
 
 #define EDIT_CURVES
+// #define RECORDING
 
 #define BEZIER_SPEED 0.01
 #define SEA_LEVEL 0.3f
@@ -28,7 +29,7 @@ FrameBuffer fb_main(width, height);
 ScreenQuad sqad;
 Cube skybox;
 
-vec3 cam_pos(72, 1, 52);
+vec3 cam_pos(62, 1, 53);
 //vec3 cam_pos(0, 1, 0);
 vec3 cam_look;
 vec2 angles(0, 0);
@@ -65,7 +66,11 @@ GLuint _pid_point;
 GLuint _pid_point_selection;
 
 
-void saveBMP(int w, int h, const char* image, ostream &stream) {
+#ifdef RECORDING
+
+unsigned char *imgData;
+
+void saveBMP(int w, int h, const unsigned char* image, ostream &stream) {
 
 	unsigned char file[14] = {
 		'B', 'M', // magic
@@ -117,15 +122,26 @@ void saveBMP(int w, int h, const char* image, ostream &stream) {
 
 	unsigned char pad[3] = { 0, 0, 0 };
 
-	for (int y = 0; y<h; y++)
+	for (long y = 0; y<h; y++)
 	{
 		for (int x = 0; x<w; x++)
 		{
-			stream.write((const char*)(&image[4*(x + y * width)]), 3);
+			stream.write((const char*)(&image[3*(x + y * width)]), 3);
 		}
 		stream.write((char*)pad, padSize);
 	}
 }
+void saveFrame() {
+	glReadPixels(0, 0, width, height, GL_BGR, GL_UNSIGNED_BYTE, imgData);
+	ofstream imgFile;
+	char filename[32];
+	sprintf(filename, "../output/out_%d.bmp", current_frame);
+	imgFile.open(filename, std::ios_base::out | std::ios_base::binary);
+	saveBMP(width, height, imgData, imgFile);
+	imgFile.close();
+}
+
+#endif // RECORDING
 
 void initCurves() {
 	/// Compile the shaders here to avoid the duplication
@@ -288,7 +304,11 @@ void init(){
 
 	sqad.init(fb_quad.getColorAttachment(), fb_quad.getDepthAttachment());
 
-
+#ifdef RECORDING
+	navmode = BEZIER;
+	current_frame = 0;
+	imgData = (unsigned char*)calloc(width*height * 3, sizeof(char));
+#endif
 
 	glViewport(0, 0, width, height);
 }
@@ -366,7 +386,7 @@ void display(){
 		world.draw(model, view, projection, cam_pos(1));
 	fb_main.unbind();
 
-
+	
 	fb_quad.bind();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		skybox.draw(skybox_model, skybox_view, projection);
@@ -374,7 +394,7 @@ void display(){
 		cam_pos(0) = cam_pos_memo(0);
 		cam_pos(2) = cam_pos_memo(1);
 
-#ifdef EDIT_CURVES
+#if defined(EDIT_CURVES) && !defined(RECORDING)
 		model(0, 3) = -cam_pos(0);
 		model(2, 3) = -cam_pos(2);
 		for (unsigned int i = 0; i < cam_pos_points.size(); i++) {
@@ -401,16 +421,9 @@ void display(){
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	sqad.draw(view, projection, cam_pos, time);
 
-
-	char *imgData = (char*)calloc(width*height*4, sizeof(char));
-	glReadPixels(0, 0, width, height, GL_BGRA, GL_UNSIGNED_BYTE, imgData);
-	ofstream imgFile;
-	char filename[32];
-	sprintf(filename, "../output/out_%d.bmp", current_frame);
-	imgFile.open(filename);
-	saveBMP(width, height, imgData, imgFile);
-	imgFile.close();
-	free(imgData);
+#ifdef RECORDING
+	saveFrame();
+#endif
 }
 
 void update() {
@@ -664,6 +677,10 @@ void cleanup(){
 	glDeleteProgram(_pid_bezier);
 	glDeleteProgram(_pid_point);
 	glDeleteProgram(_pid_point_selection);
+
+#ifdef RECORDING
+	free(imgData);
+#endif
 }
 
 int main(int, char**){
