@@ -8,16 +8,14 @@
 #include "point.h"
 #include "curves.h"
 
-
-#define EDIT_CURVES
-#define RECORDING
-
 #define BEZIER_SPEED 0.01
 #define SEA_LEVEL 0.3f
 
+
 enum NAVIGATION_MODE {
 	NAVIGATION,
-	BEZIER
+	BEZIER, 
+	FIRST_PERSON
 } navmode;
 
 int width=1280, height=720;
@@ -45,8 +43,16 @@ vec3 sky_color(0.60, 0.70, 0.85);
 #define KEY_BWD		1
 #define KEY_LEFT	2
 #define KEY_RIGHT	3
-bool keys[] = { false, false, false, false };
+#define KEY_JUMP	4
+#define JUMP_DURATION_MS 400
+#define TIME_MS (glfwGetTime()*1000)
+#define EDIT_CURVES
+
+bool keys[] = { false, false, false, false, false };
 bool speedup = false;
+bool jumping = false;
+float jump_return_height = 0.0f;
+float jump_start_time = 0;
 int current_frame(0);
 
 mat4 model, view, projection;
@@ -212,13 +218,14 @@ void init(){
 
 	glViewport(0, 0, width, height);
 }
+int moved = 0;
 
 void display(){
 
 	opengp::update_title_fps("FrameBuffer");
 	glViewport(0, 0, width, height);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	glEnable(GL_BLEND); // not working on my laptop
+	//glEnable(GL_BLEND); // not working on my laptop
 
 	///--- Setup view-projection matrix
 	float ratio = width / (float)height;
@@ -229,7 +236,6 @@ void display(){
 	vec2 cam_pos_memo(cam_pos(0), cam_pos(2));
 	cam_pos(0) = 0;
 	cam_pos(2) = 0;
-	//cam_pos(1) = world.currentHeight();
 
 	model = mat4::Identity();
 	// For simplicity: water is at height 0
@@ -259,6 +265,9 @@ void display(){
 	vec3 cam_look2 = cam_look;
 	cam_look2(1) = cam_look(1) - cam_pos(1);
 	mat4 skybox_view = Eigen::lookAt(vec3(0, 0, 0), cam_look2, cam_up);
+
+
+
 
 	// mirror camera
 	cam_pos(1) = -cam_pos(1);
@@ -294,7 +303,7 @@ void display(){
 	fb_main.unbind();
 
 #ifdef EDIT_CURVES
-	if (navmode == BEZIER)
+	if (navmode == BEZIER || 3==3)
 #endif
 	fb_quad.bind();
 	{
@@ -326,7 +335,7 @@ void display(){
 		water.draw(mat4::Identity(), view, projection);
 	}
 #ifdef EDIT_CURVES
-	if (navmode == BEZIER) {
+	if (navmode == BEZIER || 1) {
 #endif
 		fb_quad.unbind();
 
@@ -341,30 +350,71 @@ void display(){
 #ifdef RECORDING
 	saveFrame();
 #endif
+
+
+#ifndef RECORDING
+	if (navmode == FIRST_PERSON) {
+		moved = 0;
+		float height = world.currentHeight(vec2(cam_pos(0), cam_pos(2))) - SEA_LEVEL + 0.05;
+		if (jumping) {
+			jump_return_height = height;
+		}
+		else {
+			cam_pos(1) = height;
+		}
+	}
+#endif
 }
 
 void update() {
-
-	if (navmode == NAVIGATION) {
+	if (navmode != BEZIER) {
 		const int coeff = speedup ? 3 : 1;
 		// update pos
 		if (keys[KEY_FWD]) {
 			cam_pos(2) += coeff * MOVE_INC*cos(angles(0))*cos(angles(1));
 			cam_pos(1) -= coeff * MOVE_INC*sin(angles(1));
 			cam_pos(0) -= coeff * MOVE_INC*sin(angles(0))*cos(angles(1));
+			moved = 1;
 		}
 		else if (keys[KEY_BWD]) {
 			cam_pos(2) -= coeff * MOVE_INC*cos(angles(0))*cos(angles(1));
 			cam_pos(1) += coeff * MOVE_INC*sin(angles(1));
 			cam_pos(0) += coeff * MOVE_INC*sin(angles(0))*cos(angles(1));
+			moved = 1;
 		}
 		if (keys[KEY_LEFT]) {
 			cam_pos(2) += coeff * MOVE_INC*sin(angles(0));
 			cam_pos(0) += coeff * MOVE_INC*cos(angles(0));
+			moved = 1;
 		}
 		else if (keys[KEY_RIGHT]) {
 			cam_pos(2) -= coeff * MOVE_INC*sin(angles(0));
 			cam_pos(0) -= coeff * MOVE_INC*cos(angles(0));
+			moved = 1;
+		}
+
+		if (jumping) {
+			float attenuation = ((jump_start_time - TIME_MS) / JUMP_DURATION_MS);;
+			cam_pos(1) += 0.035 * (1 + attenuation);
+			if (cam_pos(1) < jump_return_height) {
+				jumping = false;
+				cam_pos(1) = jump_return_height;
+			}
+		}
+
+		if (keys[KEY_JUMP] && !jumping) {
+			jumping = true;
+			jump_start_time = TIME_MS;
+			jump_return_height = cam_pos(1);
+		}
+		if (!keys[KEY_JUMP] && jumping) {
+			if (jump_start_time < TIME_MS + JUMP_DURATION_MS) {
+				// do nothing
+			}
+			else {
+				jumping = false;
+				cam_pos(1) = jump_return_height;
+			}
 		}
 		cam_look = cam_pos + vec3(0, 0, 1);
 	}
@@ -539,6 +589,9 @@ void keyboard(int key, int action) {
 		case 'D':
 			keys[KEY_RIGHT] = false;
 			return;
+		case 'Q':
+			keys[KEY_JUMP] = false;
+			return;
 		default: return;
 		}
 		world.regenerateHeightmap();
@@ -578,10 +631,16 @@ void keyboard(int key, int action) {
 			std::cout << "Navigation mode" << std::endl;
 			navmode = NAVIGATION;
 			break;
+		case 'F':
+			std::cout << "Fps mode" << std::endl;
+			navmode = FIRST_PERSON;
+			break;
 		case ' ':
 			speedup = true;
 			return;
-
+		case 'Q':
+			keys[KEY_JUMP] = true;
+			return;
 		default: break;
 		}
 	}

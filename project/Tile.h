@@ -48,14 +48,16 @@ public:
 		_grid->draw(model, view, projection, resolution, fb_tex, cam_height);
 	}
 
-	GLfloat currentHeight() {
-		GLfloat value[10];
-		
-		glBindBuffer(GL_FRAMEBUFFER, _fb.getFbo());
-		glReadPixels(_offset(0) / 4, _offset(1) / 4, 1, 1, GL_RGB, GL_FLOAT, &value);
-		glBindBuffer(GL_FRAMEBUFFER, 0);
-		return value[0];
+	float currentHeight(vec2 cam_pos) {
+		unsigned char res[4];
+		float x = cam_pos(0) * 256;
+		float y = cam_pos(1) * 256;
+
+		_fb.bind();
+		glReadPixels(x, y, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &res);
+		_fb.unbind();
+		return res[0] / 255.0;
 	}
 
 
-};
+}; 

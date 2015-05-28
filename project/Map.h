@@ -127,8 +127,8 @@ public:
 		}
 	}
 
-	float currentHeight() {
-		return active_tiles[TILES_SPAN / 2][TILES_SPAN / 2]->currentHeight();
+	float currentHeight(vec2 cam_pos) {
+		return active_tiles[TILES_SPAN / 2][TILES_SPAN / 2]->currentHeight(_cam_pos);
 	}
 
 	void cleanup() {
